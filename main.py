@@ -6,7 +6,7 @@ from control.event_manager import EventManager
 
 import threading
 import tkinter as tk
-from ihm.app_test import HalcyonIHM
+from ihm.app import HalcyonIHM
 
 from utils.logger import setup_logger
 
