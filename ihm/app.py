@@ -75,40 +75,6 @@ def make_card(parent, title=None, **kwargs):
         lbl.pack(anchor="w", padx=10, pady=(8, 2))
     return frame
 
-def make_round_button(parent, text, command, dia=60, color=ACCENT):
-    canvas = tk.Canvas(parent, width=dia, height=dia, bg=BG2, highlightthickness=0)
-
-    circle = canvas.create_oval(2, 2, dia-2, dia-2, fill=color, outline="")
-
-    texte = canvas.create_text(dia/2, dia/2, text=text, fill=BG2, font=FONT_BIG)
-
-        # centre pour scale
-    cx, cy = dia/2, dia/2
-
-    # --------- HOVER ---------
-    def on_enter(event):
-        canvas.itemconfig(circle, fill=DISABLE_BG)
-        canvas.itemconfig(texte, fill = "black")
-
-    def on_leave(event):
-        canvas.itemconfig(circle, fill=color)
-        canvas.itemconfig(texte,fill=BG2)
-
-    # --------- CLIC (PRESSION) ---------
-    def on_press(event):
-        canvas.scale("all", cx, cy, 0.9, 0.9)
-
-    def on_release(event):
-        canvas.scale("all", cx, cy, 1/0.9, 1/0.9)
-        command()
-
-    # bindings
-    canvas.bind("<Enter>", on_enter)
-    canvas.bind("<Leave>", on_leave)
-    canvas.bind("<ButtonPress-1>", on_press)
-    canvas.bind("<ButtonRelease-1>", on_release)
-
-    return canvas
 
 # ─────────────────────────────────────────────
 #  CLASSE PRINCIPALE
@@ -692,7 +658,6 @@ Valider pour fermer la fenêtre."""
                                 bg=GREEN, fg = 'white',
                                 command=lambda:self._on_validate_error(popup))
             btn_yes.grid(row = 0, column = 0, padx=(6, 6), pady=4)
-
 
     def _refresh_time(self):
         # Horloge

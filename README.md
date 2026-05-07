@@ -131,7 +131,7 @@ ERROR_SENSOR → sécurité fonctionnement capteurs\
 | START or HEATING or HOLD or COOLING | Arrêt utilisateur   | STOP           |
 | ERROR_TEMP      | Erreur validée                          | STOP           |
 | WARNING_PUMP    | Erreur validée & press_vide < -0.5 bar  | état précédent |
-| ERROR_SENSOR    | Erreur validée                          | IDLE           |
+| ERROR_SENSOR    | Erreur validée                          | Arret cycle    |
 
 ## Etat intial (démarrage ou redémarrage)
 - tous les relais OFF
