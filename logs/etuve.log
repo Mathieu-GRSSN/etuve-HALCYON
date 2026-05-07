@@ -1,0 +1,21 @@
+2026-05-06 15:36:43 | INFO | Transition: IDLE -> IDLE
+2026-05-06 15:36:59 | INFO | Transition: START -> START
+2026-05-06 15:37:07 | INFO | Transition: HEATING -> HEATING
+2026-05-06 15:37:10 | INFO | Transition: STOP -> STOP
+2026-05-06 15:42:19 | INFO | Transition: IDLE -> START
+2026-05-06 15:42:29 | INFO | Transition: START -> HEATING
+2026-05-06 15:42:42 | INFO | Transition: HEATING -> HOLD
+2026-05-06 15:42:54 | INFO | Transition: HOLD -> COOLING
+2026-05-06 15:42:57 | INFO | Transition: COOLING -> STOP
+2026-05-06 15:42:59 | INFO | Transition: STOP -> IDLE
+2026-05-06 15:50:49 | INFO | Transition: IDLE -> START
+2026-05-06 15:52:27 | INFO | Transition: IDLE -> START
+2026-05-06 15:53:10 | INFO | Transition: IDLE -> START
+2026-05-06 15:58:40 | INFO | Transition: IDLE -> START
+2026-05-06 16:01:27 | INFO | Transition: IDLE -> START
+2026-05-06 16:25:54 | INFO | Cycle validé - Température cible : 40 min - Temps de maintien : 10 °C - Pompe : Activée - Température d'arret : 35 °C'
+2026-05-06 16:25:55 | INFO | Transition: IDLE -> START
+2026-05-06 16:26:03 | INFO | Transition: START -> HEATING
+2026-05-06 16:26:14 | WARNING | Arret forcé
+2026-05-06 16:26:18 | INFO | Transition: STOP -> IDLE
+2026-05-06 16:26:22 | WARNING | Arret forcé
