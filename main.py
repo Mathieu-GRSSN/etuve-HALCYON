@@ -52,8 +52,8 @@ data = {
 }
 
 # Initialisation de composants
-capteurs = Capteur(data)
-relais = Relais(RELAIS_ID)
+capteurs = Capteur(data, logger)
+relais = Relais(RELAIS_ID, logger)
 window = tk.Tk()
 ihm = HalcyonIHM(window, data)
 sm = StateMachine(relais, capteurs,ihm, data, logger)
@@ -89,6 +89,8 @@ t = threading.Thread(target=control_loop, daemon=True)
 t.start()
 
 # Lancer l'IHM dans le thread principal (obligatoire pour Tkinter)
+logger.info("Ouverture IHM")
 ihm.run()
+logger.info("Fermeture IHM")
 
 relais.cleanup()

@@ -842,7 +842,6 @@ class HalcyonIHM:
         popup.destroy()
  
     def _not_validated(self, popup):
-
         popup.destroy()
 
     def _on_start_stop(self):
@@ -857,11 +856,11 @@ class HalcyonIHM:
     
     def _quit(self):
         """Fermeture propre : coupe le refresh, détruit la fenetre, passe en état stop"""
-        self._running = False
-        self.window.destroy()
-
         self.data["force_stop_flag"] = True 
 
+        self._running = False
+        self.window.destroy()
+        
     def _toggle_fullscreen(self):
         """Bascule plein écran / fenêtre (utile pour le debug)."""
         is_fullscreen = self.window.attributes('-fullscreen')

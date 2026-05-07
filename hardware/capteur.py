@@ -7,7 +7,7 @@ import os
 
 
 class Capteur:
-    def __init__(self, data):
+    def __init__(self, data, logger):
         
         # Initialise et configure le TC-08 sans dépendances externes.
         self.chandle = ctypes.c_int16()
@@ -17,6 +17,9 @@ class Capteur:
         self.lock = threading.Lock()
 
         self.mesure_pression = data.get("pump_activation")
+
+        # Connection log
+        self.logger = logger
 
         # dictionnaire de toutes les mesures effectuées
         self.all_mesures = {
@@ -34,26 +37,28 @@ class Capteur:
     def configure_channels(self):
 
         # 1. Ouverture de l'unité
-        self.open_unit = tc08.usb_tc08_open_unit() # open le driver pico TC-08 et attribut un identifiant
-        self.chandle = self.open_unit 
+        open_unit = tc08.usb_tc08_open_unit() # open le driver pico TC-08 et attribut un identifiant
+        self.chandle = open_unit 
 
         # Vérification ouverture
         if self.chandle == 0:
-            # print("[capteur] Error : No more unit found. ERROR_SENSOR")
-            return False, 1
+            self.logger.error("No TC-08 unit found")
+            return False, -1
         elif self.chandle == -1:
-            # print("[capteur] Error : Unit fail to open. ERROR_SENSOR")
-            return False, 1
+            self.logger.error("TC-08 fail to open")
+            return False, -1
 
-        else:             
+        else:            
+            self.logger.info("TC-08 unit open") 
             # 2. set mains rejection to 50 Hz
-            self.set_mains = tc08.usb_tc08_set_mains(self.chandle,0)
+            set_mains = tc08.usb_tc08_set_mains(self.chandle,0)
             # Verification rejection
-            if self.set_mains == 0:
-                # print("[capteur] Error : Main rejection not set correctly")
-                return False, 1
+            if set_mains == 0:
+                self.logger.error("Main rejection not set correctly")
+                return False, -1
 
             else: 
+                self.logger.info("Main rejection set correctly") 
                 # 3. Configuration des canaux
                 # therocouples types and int8 equivalent # B=66 , E=69 , J=74 , K=75 , N=78 , R=82 , S=83 , T=84 , ' '=32 , X=88 
                 thermotype_k = ctypes.c_int8(75) 
@@ -61,23 +66,36 @@ class Capteur:
                     
                 # Canaux 1 à 7 : Températures (Thermocouple Type K)
                 for i in range(1, 8):
-                    tc08.usb_tc08_set_channel(self.chandle, i, thermotype_k)
+                    set_channel = tc08.usb_tc08_set_channel(self.chandle, i, thermotype_k)
+                    if set_channel == 1:
+                        self.logger.info("Capteur {i} configuré en thermocouple K") 
+                    else:
+                        self.logger.error("Capteur {i} non configuré") 
+                        return False, -1
                         
                 # Canal 8 : Tension de sortie du capteur de pression (CP01)
-                tc08.usb_tc08_set_channel(self.chandle, 8, capteur_voltage)
+                set_channel = tc08.usb_tc08_set_channel(self.chandle, 8, capteur_voltage)
+                if set_channel == 1:
+                    self.logger.info("Capteur {8} configuré en capteur X") 
+                else:
+                    self.logger.error("Capteur {i} non configuré") 
+                    return False, -1
 
                 # Récupère la plus petite intervalle
                 _min_interval =tc08.usb_tc08_get_minimum_interval_ms(self.chandle)
-                print(f'[capteur] Minimum interval : {_min_interval}')
+                if _min_interval == 0:
+                    self.logger.error("Intervale minimum inaccessible") 
+                    return False, -1
 
                 self.is_open = True                
-                # print("[capteur] TC-08 configuré avec succés.")
+                self.logger.info("TC-08 configuré avec succés.")
                 return True, _min_interval
         
 
     def lire_instantane(self):
         
         if not self.is_open:
+            self.logger.error("Aucun TC-08 configuré")
             return None
 
         # Buffer pour recevoir les 9 valeurs (index 0 = soudure froide, 1-8 = canaux)
@@ -126,14 +144,17 @@ class Capteur:
             close_unit = tc08.usb_tc08_close_unit(self.chandle)
             if close_unit==1:
                 self.is_open = False
-                # print("[capteur] TC-08 déconnecté.")
+                self.logger.info("TC-08 déconnecté.")
                 return False
+            else :
+                self.logger.warning("TC-08 non déconnecté.")
+                return True
         
     def reset_mesures(self):
         with self.lock:
             for i in self.all_mesures:
                 self.all_mesures[i] = []
-        # print(f"[capteur] Mesures reset")
+        self.logger.info("Mesures remises à zero")
 
     def get_all_mesures(self):
         return self.all_mesures
@@ -147,3 +168,5 @@ class Capteur:
         filepath = os.path.join(DATA_DIR, filename)
         df = pd.DataFrame(self.all_mesures)
         df.to_csv(filepath, index = False, sep=";", encoding = 'utf-8') # exporte les données dans un csv
+
+        self.logger.info("Mesures sauvegardés")
