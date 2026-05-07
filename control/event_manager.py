@@ -21,8 +21,22 @@ class EventManager:
             event = 'force_stop'
             return event
 
-        elif max(temp_list)>=200:
+        if max(temp_list)>=200:
             event='stop_heat'
+            return event
+        
+        if data.get("min_interval_sensor") != None:
+            if data.get("min_interval_sensor")<0:
+                data['error_sensor_flag'] = True
+                event='error_sensor'
+                return event
+
+        if data.get("state") == "ERROR_SENSOR":
+            if data.get("error_sensor_flag"):
+                event = "no_transition"
+
+            else:
+                event = 'cycle_end'
             return event
 
         elif data.get("state") == "IDLE":

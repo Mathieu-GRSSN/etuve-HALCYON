@@ -39,6 +39,14 @@ class StateMachine:
 
             update = self.stop_heat() 
             return update
+        
+        if event == 'error_sensor':
+
+            self.logger.error("ERROR SENSOR")
+
+            update["state"] = "ERROR_SENSOR"
+            self.on_enter("ERROR_SENSOR")
+            return update
 
         
         if event in ['cycle_validated','end_init', 'temperature_reached', 'time_reached','temperature_low', 'cycle_end']:
@@ -100,6 +108,10 @@ class StateMachine:
         update["previous_state"] = self.data["state"]
         update["state"] = self.data["state"]
 
+        if state == "ERROR_SENSOR":
+            
+            return update
+
         if state == "IDLE":
             previous_state = self.data["state"]
             update = copy.deepcopy(self.data_initial)
@@ -112,16 +124,19 @@ class StateMachine:
 
         if state == "START":
             update["sensor_activated"], update["min_interval_sensor"] = self.capteurs.configure_channels()
-            self.relais.ventilation_on()
-            update["ventilation_activated"] = True
 
-            if self.data.get("PUMP_ACTIVATION"):
-                self.relais.pump_on()
-                update["pump_activated"] = True
-
-            # print(f'[state_machine] update: {update}')
+            if not update["sensor_activated"] and update["min_interval_sensor"] < 0 :
+                return update
             
-            return update
+            else:
+                self.relais.ventilation_on()
+                update["ventilation_activated"] = True
+
+                if self.data.get("PUMP_ACTIVATION"):
+                    self.relais.pump_on()
+                    update["pump_activated"] = True
+                
+                return update
 
         elif state == "HEATING":
             self.relais.heating_Pmax_on()
@@ -242,6 +257,8 @@ class StateMachine:
             update["previous_state"] = self.data["state"]
             return update
         
+        else:
+            return update
     # ─────────────────────────────────────────────
     # UTILITAIRES
     # ─────────────────────────────────────────────

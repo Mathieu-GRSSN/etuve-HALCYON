@@ -42,6 +42,7 @@ FONT_MONO   = ("Lexend", 10)
 FONT_TITLE  = ("Lexend", 11, "bold")
 FONT_BIG    = ("Lexend", 28, "bold")
 FONT_MED    = ("Lexend", 14, "bold")
+FONT_MED2   = ("Lexend", 18, "bold")
 FONT_LABEL  = ("Lexend", 10, "bold")
 FONT_BTN    = ("Lexend", 11, "bold")
 
@@ -53,7 +54,7 @@ STATE_COLORS = {
     "HOLD": GREEN,
     "COOLING": GREEN,
     "STOP": FG_DIM,
-    "ERROR": RED,
+    "ERROR_SENSOR": RED,
 }
 
 # états où le rond doit clignoter (hors IDLE/STOP)
@@ -120,6 +121,7 @@ class HalcyonIHM:
         self._running = True
         self._chart_t0 = None      # référence temporelle du graphe
         self._blink_visible = True
+        self._popup_error_exist = False
         self._last_blink = time.time()
         self._curve_plotted = False
         self._cycle_locked = False
@@ -321,7 +323,7 @@ class HalcyonIHM:
         ]
         self._press_color = FG
 
-            # Cr�er les lignes une seule fois, vides
+        # Cr�er les lignes une seule fois, vides
         self._temp_lines = []
         for i, name in enumerate(self._temp_names):
             line, = self._ax_t.plot([], [], color=self._temp_colors[i],
@@ -619,6 +621,7 @@ class HalcyonIHM:
     # ────────────────────────────────────────────
     def _start_refresh(self):
 
+        self._refresh_popup_error()
         self._refresh_time()
         self._refresh_state()
         self._refresh_cycle_buttons()
@@ -631,8 +634,67 @@ class HalcyonIHM:
         self._refresh_freq = 100
         self.window.after(round(self._refresh_freq), self._start_refresh) 
 
-    def _refresh_time(self):
+    def _refresh_popup_error(self):
+        """
+        Affiche un popup s'il y a une erreur
+        """
 
+        if not self.data.get("error_sensor_flag"):
+            self._popup_error_exist = False
+            return
+        else :
+            _error_title = "Erreur capteur"
+
+        if self._popup_error_exist:
+            return
+        else:
+            self._popup_error_exist = True
+
+            popup = tk.Toplevel(self.window, bg=BG)
+            popup.title(_error_title)
+            popup.geometry("600x400")
+            popup.transient(self.window)
+            popup.grab_set()
+            popup.focus_set()
+            popup.protocol("WM_DELETE_WINDOW", lambda: self._on_validate_error(popup))
+
+            inner = tk.Frame(popup, bg=BG2)
+            inner.pack(fill="both", expand=True, padx=1, pady=1)
+
+            # Texte de confirmation
+            text_label = tk.Frame(inner, bg=BG2)
+            text_label.pack(fill="both", expand=True, padx=10, pady=10)
+
+            text_label.columnconfigure(0, weight=1) 
+            text_label.rowconfigure(0, weight=1)    
+
+            text = """
+Une erreur a été détectée lors de la configuration du TC-08.
+
+Veuillez vérifier les branchements et réessayer.
+
+Valider pour fermer la fenêtre."""
+
+            tk.Label(text_label, text=text,
+                    bg=BG2, fg=ERROR, font=FONT_MED2,
+                    wraplength=550, justify="center", anchor="center").grid(row = 0, column = 0)
+
+            # Boutons
+            btn_frame = tk.Frame(inner, bg=BG2)
+            btn_frame.pack(fill="x", padx=10, pady=10)
+
+            btn_frame.columnconfigure(0, weight=1) 
+            btn_frame.rowconfigure(0, weight=1) 
+
+
+            btn_yes = tk.Button(btn_frame, text="Valider", 
+                                width = 10, font=FONT_BIG, bd=0, padx=8, pady=10, cursor="hand2", 
+                                bg=GREEN, fg = 'white',
+                                command=lambda:self._on_validate_error(popup))
+            btn_yes.grid(row = 0, column = 0, padx=(6, 6), pady=4)
+
+
+    def _refresh_time(self):
         # Horloge
         self._lbl_clock.config(text=time.strftime("%d/%m/%Y  %H:%M:%S"))
 
@@ -759,7 +821,7 @@ class HalcyonIHM:
             Si state différent de IDLE, choix cycle grisé
         """
 
-        print(f"[app_test] Refresh cycle buttons - state: {self.data['state']} - previous_state: {self.data['previous_state']}")
+        #print(f"[app_test] Refresh cycle buttons - state: {self.data['state']} - previous_state: {self.data['previous_state']}")
 
         state_entry = "normal" if self._var_pump.get() else "disabled"
         self._spin_temp_hold.config(state=state_entry, bg=BG3 if self._var_pump.get() else DISABLE_BG)
@@ -768,11 +830,11 @@ class HalcyonIHM:
             if self.data["state"] == "IDLE":
                 self._cycle_locked = False
                 self._set_cycle_lock(False)
-                print("[app_test] Cycle déverrouillé")
+                #print("[app_test] Cycle déverrouillé")
             else:
                 self._cycle_locked = True
                 self._set_cycle_lock(True)
-                print("[app_test] Cycle verrouillé")
+                #print("[app_test] Cycle verrouillé")
 
     def _refresh_btn_start_stop(self):
         
@@ -824,7 +886,7 @@ class HalcyonIHM:
           - Verrouille le formulaire
         """
 
-        print(f"[app_test] on_validate")
+        #print(f"[app_test] on_validate")
 
         # Mise à jour du dictionnaire partagé
         self.data["TEMP_CIBLE"]      = int(self._var_temp.get())
@@ -840,6 +902,24 @@ class HalcyonIHM:
         self._set_cycle_lock(True)
 
         popup.destroy()
+
+    def _on_validate_error(self, popup):
+        """
+        Valide le cycle :
+          - Lit et vérifie les saisies
+          - Met à jour data
+          - Verrouille le formulaire
+        """
+        # Mise à jour du dictionnaire partagé
+        self.data["sensor_activated"]       = False
+        self.data["min_interval_sensor"]    = None
+
+        # signal pour l'event_manager
+        self.data["error_sensor_flag"] = False
+
+        popup.destroy()
+        self._popup_error_exist = False
+        self._quit()
  
     def _not_validated(self, popup):
         popup.destroy()
@@ -964,7 +1044,6 @@ class HalcyonIHM:
         popup.transient(self.window)
         popup.grab_set()
         popup.focus_set()
-
 
         inner = tk.Frame(popup, bg=BG2)
         inner.pack(fill="both", expand=True, padx=1, pady=1)

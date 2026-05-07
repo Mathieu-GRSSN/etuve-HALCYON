@@ -49,6 +49,7 @@ data = {
     "end_init_flag": False,
     "force_stop_flag": False,
     "cycle_finished_flag": False,
+    "error_sensor_flag": False,
 }
 
 # Initialisation de composants
@@ -68,20 +69,20 @@ def control_loop():
         if event != "no_transition":
             print(f'[main] event généré : {event}')
 
+        if event == "error_sensor":
+            print(f"[main] error sensor event - error sensor flag = {data.get('error_sensor_flag')}")
+
         # Appliquer transitions
         updates_sm = sm.transition(event, data)
 
         # Appliquer les modifications de data
         if "state" in updates_sm.keys():
-            print(f'[main] updates : state {updates_sm.get("state", "None")}; previous state : {updates_sm.get("previous_state", "None")}')
+            print(f'[main] new state : {updates_sm.get("state", "None")}; previous state : {updates_sm.get("previous_state", "None")}')
         data.update(updates_sm)
 
         print(f'[main] data state : {data.get("state")}')
 
-        if not data.get("min_interval_sensor"):
-            wait_time = 0.1
-        else :
-            wait_time=data.get("min_interval_sensor")/1000
+        wait_time = 0.1
         time.sleep(wait_time)  # Attendre un peu avant la prochaine itération
 
 # Lancer le thread de controle en arrière-plan

@@ -127,11 +127,11 @@ ERROR_SENSOR → sécurité fonctionnement capteurs\
 | STOP            | enregistrements terminés                | IDLE           |
 | HEATIG or HOLD  | max(temp) > 250°C                       | ERROR_TEMP     |
 | HEATIG or HOLD or COOLING | press_vide > -0.5bar          | WARNING_PUMP   |
-| HEATING or HOLD or COOLING | capteurs non fonctionnels    | ERROR_SENSOR   |
+| START           | capteurs non fonctionnels               | ERROR_SENSOR   |
 | START or HEATING or HOLD or COOLING | Arrêt utilisateur   | STOP           |
 | ERROR_TEMP      | Erreur validée                          | STOP           |
 | WARNING_PUMP    | Erreur validée & press_vide < -0.5 bar  | état précédent |
-| ERROR_SENSOR    | Erreur validée                          | état précédent |
+| ERROR_SENSOR    | Erreur validée                          | IDLE           |
 
 ## Etat intial (démarrage ou redémarrage)
 - tous les relais OFF
@@ -261,7 +261,7 @@ ERROR_SENSOR → sécurité fonctionnement capteurs\
 **Actions en entrée d'état** :
 - envoie un message d'alerte
 
-Conditions de sortie :
+**Conditions de sortie** :
 - la pression du vide redescend en dessous de -0.5bar (press_vide < -0.5 bar)
 - Validation fin erreur par l'utilisateur : error_end
 
@@ -270,10 +270,9 @@ Conditions de sortie :
 - Assurer le bon fonctionnement des capteurs
 
 **Actions en entrée d'état** :
-- envoie un message d'alerte
-- arrêt des résistances (relay2 & relay3 OFF)
+- envoie un message d'alerte si le TC-08 s'initalise mal
 
-Conditions de sortie :
+**Conditions de sortie** :
 - Validation fin erreur par l'utilisateur : error_end
 
 # Interface Homme -Machine

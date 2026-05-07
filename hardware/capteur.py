@@ -104,8 +104,12 @@ class Capteur:
         units = tc08.USBTC08_UNITS["USBTC08_UNITS_CENTIGRADE"]
 
         # Capture unique les données au temps t et les range dans temp_buffer
-        tc08.usb_tc08_get_single(self.chandle, ctypes.byref(temp_buffer), ctypes.byref(overflow), units)
+        get_single = tc08.usb_tc08_get_single(self.chandle, ctypes.byref(temp_buffer), ctypes.byref(overflow), units)
 
+        if get_single == 0:
+            self.logger.warning("Erreur de lecture du TC-08")
+            temp_buffer = [None]*9
+        
         # Converti la valeur et l'enregistre si la pump est activée
         if self.mesure_pression :
             if temp_buffer[8] > 0.5 and temp_buffer[8] < 4.5:
