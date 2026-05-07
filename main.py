@@ -31,7 +31,7 @@ data = {
     "temp6": 0,
     "temp7": 0,
     "press_vide": 0,
-    "_all_mesures": None,
+    "_all_mesures": {},
     "TEMP_CIBLE": 40,
     "TIME_HOLD": 10,
     "PUMP_ACTIVATION": False,

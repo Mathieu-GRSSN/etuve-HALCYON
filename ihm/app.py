@@ -621,17 +621,14 @@ class HalcyonIHM:
 
         self._refresh_time()
         self._refresh_state()
-        self._refresh_data()
-        self._refresh_curve()
         self._refresh_cycle_buttons()
         self._refresh_components()
         self._refresh_btn_start_stop()
+        self._refresh_data()
+        self._refresh_curve()
 
         # fréquence rafraichissement
         self._refresh_freq = 100
-        if self.data.get("min_interval_sensor") != None:
-            self._refresh_freq = self.data.get("min_interval_sensor")/10
-
         self.window.after(round(self._refresh_freq), self._start_refresh) 
 
     def _refresh_time(self):
@@ -669,6 +666,13 @@ class HalcyonIHM:
             data_active = False
         else:
             data_active = True
+
+        # Redessiner seulement si un nouveau point est arrivé
+        mesures = self.data.get("_all_mesures")
+        n = len(mesures.get("Time", []))
+        if n <= getattr(self, "_last_plot_data_n", -1):
+            return  # rien de nouveau, on ne redessine pas
+        self._last_plot_data_n = n
 
         if data_active:
             # Températures et pression
@@ -713,12 +717,11 @@ class HalcyonIHM:
             if not mesures:
                 return
  
-
             # Redessiner seulement si un nouveau point est arrivé
             n = len(mesures.get("Time", []))
-            if n == getattr(self, "_last_plot_n", -1):
+            if n <= getattr(self, "_last_plot_curve_n", -1):
                 return  # rien de nouveau, on ne redessine pas
-            self._last_plot_n = n
+            self._last_plot_curve_n = n
 
             self._update_plot()
             self._chart_canvas.draw_idle()
