@@ -17,7 +17,11 @@ class StateMachine:
             "HOLD": self.hold_state,
             "COOLING": self.cooling_state,
             "STOP": self.stop_state,
+            "ERROR_SENSOR": self.end_error,
+            "ERROR_TEMP": self.end_error
         }
+        self.list_transition = ['cycle_validated','end_init', 'temperature_reached', 'time_reached','temperature_low', 'cycle_end', 'end_error']
+        self.list_transition_error = []
         self.logger = logger
         self.lock = lock
         
@@ -49,9 +53,8 @@ class StateMachine:
             update["state"] = "ERROR_SENSOR"
             self.on_enter("ERROR_SENSOR")
             return update
-
             
-        if event in ['cycle_validated','end_init', 'temperature_reached', 'time_reached','temperature_low', 'cycle_end']:
+        if event in self.list_transition:
             new_state = self.states_fonc[self.data["state"]](event)
 
             if new_state != self.data["state"]:
@@ -101,6 +104,11 @@ class StateMachine:
         if event == "cycle_end":
             return "IDLE"
         return self.data["state"]
+    
+    def end_error(self, event):
+        if event == "end_error":
+            return "STOP"
+        return self.data["state"]
 
     # -------
     # ON ENTER : execute les actions en entrée d'état, renvoie les modifications de data
@@ -112,7 +120,7 @@ class StateMachine:
         update["state"] = self.data["state"]
 
         if state == "ERROR_SENSOR":
-            
+            self.relais.all_relay_off()
             return update
 
         if state == "IDLE":

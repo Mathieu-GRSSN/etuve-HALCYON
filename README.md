@@ -272,6 +272,7 @@ ERROR_SENSOR → sécurité fonctionnement capteurs\
 
 **Actions en entrée d'état** :
 - envoie un message d'alerte si le TC-08 s'initalise mal
+- arret relay
 
 **Conditions de sortie** :
 - Validation fin erreur par l'utilisateur : error_end

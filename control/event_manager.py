@@ -16,12 +16,17 @@ class EventManager:
         temp_list = []
         for i in [1,7]:
             temp_list.append(data.get(f"temp{i}"))
+            if data.get(f"temp{i}") is None:
+                update['error_sensor_flag'] = True
+                event='error_sensor'
+                return event, update
+
 
         if data.get("force_stop_flag"):
             update["force_stop_flag"] = False
             event = 'force_stop'
             return event, update
-
+        
         if max(temp_list)>=200:
             event='stop_heat'
             return event, update
@@ -37,7 +42,7 @@ class EventManager:
                 event = "no_transition"
 
             else:
-                event = 'cycle_end'
+                event = 'end_error'
             return event, update
 
         elif data.get("state") == "IDLE":
