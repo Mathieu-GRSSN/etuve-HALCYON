@@ -1,18 +1,17 @@
 import ctypes
 from picosdk.usbtc08 import usbtc08 as tc08
 from datetime import datetime
-import threading
 
 
 class Capteur:
-    def __init__(self, data, logger):
+    def __init__(self, data, logger, lock):
         
         # Initialise et configure le TC-08 sans dépendances externes.
         self.chandle = ctypes.c_int16()
         self.is_open = False
 
         # Lock pour protéger écriture données
-        self.lock = threading.Lock()
+        self.lock = lock
 
         self.mesure_pression = data.get("pump_activation")
 
@@ -136,7 +135,8 @@ class Capteur:
                 self.all_mesures[id].append(mesures[id])
         
         # Renvoie toutes les mesures pour mise à jour affichage
-        mesures["_all_mesures"] = self.all_mesures
+        with self.lock:
+            mesures["_all_mesures"] = self.all_mesures
 
         return mesures
 
@@ -159,4 +159,5 @@ class Capteur:
         self.logger.info("Mesures remises à zero")
 
     def get_all_mesures(self):
-        return self.all_mesures
+        with self.lock:
+            return self.all_mesures

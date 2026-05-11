@@ -13,6 +13,9 @@ from utils.logger import setup_logger
 # Définition des logs 
 logger = setup_logger()
 
+# Gestion de la concurrence avec un lock pour protéger l'accès à la variable data
+lock = threading.RLock()
+
 # Défininition des relais avec leur borne GPIO
 RELAIS_ID = {
     "RELAY1_VENTILATION": 14,
@@ -53,36 +56,28 @@ data = {
 }
 
 # Initialisation de composants
-capteurs = Capteur(data, logger)
+capteurs = Capteur(data, logger, lock)
 relais = Relais(RELAIS_ID, logger)
 window = tk.Tk()
-ihm = HalcyonIHM(window, data)
-sm = StateMachine(relais, capteurs,ihm, data, logger)
+ihm = HalcyonIHM(window, data, lock)
+sm = StateMachine(relais, capteurs,ihm, data, logger, lock)
 em = EventManager(logger)
+
+
 
 def control_loop():
     while True:
             
         # Générer évenement
-        event = em.generate_events(data)
-        
-        # print(f'[main] event : {event}')
-        # if event != "no_transition":
-        #     print(f'[main] event généré : {event}')
-
-        # if event == "error_sensor":
-        #     print(f"[main] error sensor event - error sensor flag = {data.get('error_sensor_flag')}")
+        with lock:
+            event, update_em = em.generate_events(data)
+            data.update(update_em) # Applique les modif de data
 
         # Appliquer transitions
         updates_sm = sm.transition(event, data)
+        with lock :
+            data.update(updates_sm) # Applique les modif de data
 
-        # if "state" in updates_sm.keys():
-        #     print(f'[main] new state : {updates_sm.get("state", "None")}; previous state : {updates_sm.get("previous_state", "None")}')
-
-        # Appliquer les modifications de data
-        data.update(updates_sm)
-
-        # print(f'[main] data state : {data.get("state")}')
 
         # Attendre un peu avant la prochaine itération
         wait_time = 0.1

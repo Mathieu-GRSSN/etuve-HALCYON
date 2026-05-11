@@ -119,7 +119,7 @@ class StateMachine:
             update["previous_state"] = previous_state
             print(f'[state_machine] on_enter IDLE -> previous_state : {update["previous_state"]}')
             # print(f'[state_machine] data réinitialisé -> {update}')
-            self.ihm._reset_ihm()
+            self.ihm.window.after(0, self.ihm._reset_ihm)
             self.capteurs.reset_mesures()
             return update
 

@@ -7,29 +7,30 @@ class EventManager:
 
     def generate_events(self, data):
         event = None
+        update = {}
 
         # =========================
         # CYCLE
         # =========================
-
+        
         temp_list = []
         for i in [1,7]:
             temp_list.append(data.get(f"temp{i}"))
 
         if data.get("force_stop_flag"):
-            data["force_stop_flag"] = False
+            update["force_stop_flag"] = False
             event = 'force_stop'
-            return event
+            return event, update
 
         if max(temp_list)>=200:
             event='stop_heat'
-            return event
-        
+            return event, update
+
         if data.get("min_interval_sensor") != None:
             if data.get("min_interval_sensor")<0:
-                data['error_sensor_flag'] = True
+                update['error_sensor_flag'] = True
                 event='error_sensor'
-                return event
+                return event, update
 
         if data.get("state") == "ERROR_SENSOR":
             if data.get("error_sensor_flag"):
@@ -37,7 +38,7 @@ class EventManager:
 
             else:
                 event = 'cycle_end'
-            return event
+            return event, update
 
         elif data.get("state") == "IDLE":
 
@@ -49,11 +50,11 @@ class EventManager:
                 text_log = f"Cycle validé - {text_temp} - Pompe : {text_pump}"
                 self.logger.info(text_log)
 
-                data["cycle_validated_flag"] = False
+                update["cycle_validated_flag"] = False
                 event = "cycle_validated"
             else:
                 event = "no_transition"
-            return event
+            return event, update
          
         elif data.get("state") == "START":
             
@@ -63,13 +64,13 @@ class EventManager:
                     event="no_transition"
                 else:
                     if data.get("end_init_flag"):
-                        data["end_init_flag"] = False
+                        update["end_init_flag"] = False
                         event = 'end_init' 
                     else:
                         event="no_transition"       
             else:
                 event="no_transition"
-            return event
+            return event, update
 
         elif data.get("state") == "HEATING":
             temp_min_tool = min(data.get("temp1"), data.get("temp2"))
@@ -82,7 +83,7 @@ class EventManager:
             else:
                 event="no_transition"
 
-            return event
+            return event, update
             
         elif data.get("state") == "HOLD":
             elapsed = datetime.now() - data.get("time_start_hold")
@@ -94,7 +95,7 @@ class EventManager:
             else:
                 event="no_transition"
             
-            return event
+            return event, update
 
         elif data.get("state") == "COOLING":
             temp_max_tool = min(data.get("temp1"), data.get("temp2"))
@@ -104,37 +105,20 @@ class EventManager:
             else:
                 event="no_transition"
                 
-            return event
+            return event, update
 
         elif data.get("state") == "STOP":
 
             if not data.get("ventilation_activated") and not data.get("P1_activated") and not data.get("P2_activated") and not data.get("pump_activated"):
                 event = 'cycle_end'
-                data["cycle_finished_flag"] = True
+                update["cycle_finished_flag"] = True
 
             else:
                 event="no_transition"
 
-            return event               
+            return event, update
 
         else:
             event = 'no_transition'
-            return event
+            return event, update
         
-
-# =========================
-# TEST
-# =========================
-
-if __name__ == "__main__":
-    # Données simulées — remplacées par le dict partagé de main.py en prod
-    data = {
-        "temp1": 24.3,
-        "temp2": 23.8,
-        "state": "IDLE",
-        "running": False,
-        "TEMP_CIBLE": 120,
-        "time_stop": 5,
-        "STOP_count": 0,
-    }
-

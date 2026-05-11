@@ -81,9 +81,10 @@ def make_card(parent, title=None, **kwargs):
 # ─────────────────────────────────────────────
 
 class HalcyonIHM:
-    def __init__(self, window, data: dict):
+    def __init__(self, window, data: dict, lock):
         self.window = window
         self.data = data          # dictionnaire partagé avec main.py
+        self.lock = lock
         self._running = True
         self._chart_t0 = None      # référence temporelle du graphe
         self._blink_visible = True
@@ -786,8 +787,6 @@ Valider pour fermer la fenêtre."""
             Si state différent de IDLE, choix cycle grisé
         """
 
-        #print(f"[app_test] Refresh cycle buttons - state: {self.data['state']} - previous_state: {self.data['previous_state']}")
-
         state_entry = "normal" if self._var_pump.get() else "disabled"
         self._spin_temp_hold.config(state=state_entry, bg=BG3 if self._var_pump.get() else DISABLE_BG)
 
@@ -795,11 +794,9 @@ Valider pour fermer la fenêtre."""
             if self.data["state"] == "IDLE":
                 self._cycle_locked = False
                 self._set_cycle_lock(False)
-                #print("[app_test] Cycle déverrouillé")
             else:
                 self._cycle_locked = True
                 self._set_cycle_lock(True)
-                #print("[app_test] Cycle verrouillé")
 
     def _refresh_btn_start_stop(self):
         
@@ -851,16 +848,15 @@ Valider pour fermer la fenêtre."""
           - Verrouille le formulaire
         """
 
-        #print(f"[app_test] on_validate")
+        with self.lock:
+            # Mise à jour du dictionnaire partagé
+            self.data["TEMP_CIBLE"]      = int(self._var_temp.get())
+            self.data["TIME_HOLD"]       = int(self._var_hold.get())
+            self.data["PUMP_ACTIVATION"] = self._var_pump.get()
+            self.data["TEMP_STOP_PUMP"]  = int(self._var_temp_pump.get()) if self._var_pump.get() else 0
 
-        # Mise à jour du dictionnaire partagé
-        self.data["TEMP_CIBLE"]      = int(self._var_temp.get())
-        self.data["TIME_HOLD"]       = int(self._var_hold.get())
-        self.data["PUMP_ACTIVATION"] = self._var_pump.get()
-        self.data["TEMP_STOP_PUMP"]  = int(self._var_temp_pump.get()) if self._var_pump.get() else 0
-
-        # signal pour l'event_manager
-        self.data["cycle_validated_flag"] = True
+            # signal pour l'event_manager
+            self.data["cycle_validated_flag"] = True
 
         # Verrouillage du formulaire
         self._cycle_locked = True
@@ -875,12 +871,13 @@ Valider pour fermer la fenêtre."""
           - Met à jour data
           - Verrouille le formulaire
         """
-        # Mise à jour du dictionnaire partagé
-        self.data["sensor_activated"]       = False
-        self.data["min_interval_sensor"]    = None
+        with self.lock:
+            # Mise à jour du dictionnaire partagé
+            self.data["sensor_activated"]       = False
+            self.data["min_interval_sensor"]    = None
 
-        # signal pour l'event_manager
-        self.data["error_sensor_flag"] = False
+            # signal pour l'event_manager
+            self.data["error_sensor_flag"] = False
 
         popup.destroy()
         self._popup_error_exist = False
@@ -895,13 +892,16 @@ Valider pour fermer la fenêtre."""
         Si text = "STOP" stop le système
         '''
         if self._btn_start_stop.cget("text") == "START":
-            self.data["end_init_flag"] = True   # signal pour démarrer le chauffage
+            with self.lock:
+                self.data["end_init_flag"] = True   # signal pour démarrer le chauffage
         else:
-            self.data["force_stop_flag"] = True      # signal d'arret d'urgence
-    
+            with self.lock:
+                self.data["force_stop_flag"] = True      # signal d'arret d'urgence
+
     def _quit(self):
         """Fermeture propre : coupe le refresh, détruit la fenetre, passe en état stop"""
-        self.data["force_stop_flag"] = True 
+        with self.lock:
+            self.data["force_stop_flag"] = True 
 
         self._running = False
         self.window.destroy()
