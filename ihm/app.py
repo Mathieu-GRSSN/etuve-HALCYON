@@ -755,7 +755,7 @@ Valider pour fermer la fenêtre."""
                 return  # rien de nouveau, on ne redessine pas
             self._last_plot_curve_n = n
 
-            self._update_plot()
+            self._update_plot(snapshot_data)
             self._chart_canvas.draw_idle()
 
     def _refresh_components(self, snapshot_data):
@@ -771,7 +771,7 @@ Valider pour fermer la fenêtre."""
             self._last_blink = now
 
         for key, (cvs, dot, lbl) in self._comp_widgets.items():
-            active = bool(self.data.get(key, False))
+            active = bool(snapshot_data.get(key, False))
             # Label
             if active:
                 color_lbl = GREEN
@@ -919,8 +919,8 @@ Valider pour fermer la fenêtre."""
     # UTILITAIRES
     # ─────────────────────────────────────────────
 
-    def _update_plot(self):
-        mesures = self.data.get("_all_mesures")
+    def _update_plot(self, snapshot_data):
+        mesures = snapshot_data.get("_all_mesures")
         if not mesures:
          self._curve_plotted = False
          return
@@ -950,7 +950,7 @@ Valider pour fermer la fenêtre."""
         self._ax_t.legend(loc="upper left", fontsize=8, facecolor=BG3, framealpha=0.8, edgecolor="#CCCCCC")
 
         # Pression
-        if self.data["PUMP_ACTIVATION"]:
+        if snapshot_data["PUMP_ACTIVATION"]:
             if not hasattr(self, "_ax_p") or self._ax_p is None:
                 self._ax_p = self._ax_t.twinx()
 
@@ -1065,11 +1065,12 @@ Valider pour fermer la fenêtre."""
 
     def _reset_ihm(self):
 
-        # Reset des variables
-        self._var_temp.set(self.data.get("TEMP_CIBLE", 120))
-        self._var_hold.set(self.data.get("TIME_HOLD", 30))
-        self._var_pump.set(bool(self.data.get("PUMP_ACTIVATION", True)))
-        self._var_temp_pump.set(self.data.get("TEMP_STOP_PUMP", 70))
+        with self.lock:
+            # Reset des variables
+            self._var_temp.set(self.data.get("TEMP_CIBLE", 120))
+            self._var_hold.set(self.data.get("TIME_HOLD", 30))
+            self._var_pump.set(bool(self.data.get("PUMP_ACTIVATION", True)))
+            self._var_temp_pump.set(self.data.get("TEMP_STOP_PUMP", 70))
 
         # Reset courbes
 

@@ -25,7 +25,6 @@ class StateMachine:
     # TRANSITION : vérifie la condition de transition d'état, renvoie les modifications de data
     # -------
     def transition(self, event, data):
-        self.data = dict(data)
         update = {}
 
         with self.lock:
