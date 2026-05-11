@@ -2,8 +2,6 @@ import ctypes
 from picosdk.usbtc08 import usbtc08 as tc08
 from datetime import datetime
 import threading
-import pandas as pd
-import os
 
 
 class Capteur:
@@ -68,17 +66,17 @@ class Capteur:
                 for i in range(1, 8):
                     set_channel = tc08.usb_tc08_set_channel(self.chandle, i, thermotype_k)
                     if set_channel == 1:
-                        self.logger.info("Capteur {i} configuré en thermocouple K") 
+                        self.logger.info(f"Capteur {i} configuré en thermocouple K") 
                     else:
-                        self.logger.error("Capteur {i} non configuré") 
+                        self.logger.error(f"Capteur {i} non configuré") 
                         return False, -1
                         
                 # Canal 8 : Tension de sortie du capteur de pression (CP01)
                 set_channel = tc08.usb_tc08_set_channel(self.chandle, 8, capteur_voltage)
                 if set_channel == 1:
-                    self.logger.info("Capteur {8} configuré en capteur X") 
+                    self.logger.info(f"Capteur {8} configuré en capteur X") 
                 else:
-                    self.logger.error("Capteur {i} non configuré") 
+                    self.logger.error(f"Capteur {8} non configuré") 
                     return False, -1
 
                 # Récupère la plus petite intervalle
@@ -162,15 +160,3 @@ class Capteur:
 
     def get_all_mesures(self):
         return self.all_mesures
-    
-    def save_all_mesures(self):
-
-        DATA_DIR = "data"
-        os.makedirs(DATA_DIR, exist_ok=True)
-
-        filename = datetime.now().strftime("data-%d-%m-%Y.csv")
-        filepath = os.path.join(DATA_DIR, filename)
-        df = pd.DataFrame(self.all_mesures)
-        df.to_csv(filepath, index = False, sep=";", encoding = 'utf-8') # exporte les données dans un csv
-
-        self.logger.info("Mesures sauvegardés")

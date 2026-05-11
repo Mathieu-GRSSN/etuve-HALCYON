@@ -1,6 +1,6 @@
 from datetime import datetime
-import pandas as pd
 import copy
+import utils.save as us
 
 class StateMachine:
     def __init__(self, relais, capteurs, ihm, data, logger):
@@ -165,11 +165,23 @@ class StateMachine:
             # Ferme le TC-08
             update["sensor_activated"] = self.capteurs.close_connection()
 
+            # Récupère les données 
+            all_mesures = self.capteurs.get_all_mesures()
+            pressure = self.data["PUMP_ACTIVATION"]
+
             # Enregistre sous PNG les courbes
-            self.ihm._save_graph()
+            save_graph = us.save_graph(all_mesures,pressure)
+            if save_graph == 1:
+                self.logger.info(f'Données sauvegarder en PNG')
+            elif save_graph == 0:
+                self.logger.error(f"Enregistrement des données en PNG échoué")
 
             # Enregistre sous CSV les données
-            self.capteurs.save_all_mesures()
+            save_mesures = us.save_all_mesures(all_mesures)
+            if save_mesures == 1:
+                self.logger.info(f'Données sauvegarder en CSV')
+            elif save_mesures == 0:
+                self.logger.error(f"Enregistrement des données en CSV échoué")
 
             return update
 

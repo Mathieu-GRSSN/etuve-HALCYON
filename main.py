@@ -65,25 +65,28 @@ def control_loop():
             
         # Générer évenement
         event = em.generate_events(data)
-        print(f'[main] event : {event}')
-        if event != "no_transition":
-            print(f'[main] event généré : {event}')
+        
+        # print(f'[main] event : {event}')
+        # if event != "no_transition":
+        #     print(f'[main] event généré : {event}')
 
-        if event == "error_sensor":
-            print(f"[main] error sensor event - error sensor flag = {data.get('error_sensor_flag')}")
+        # if event == "error_sensor":
+        #     print(f"[main] error sensor event - error sensor flag = {data.get('error_sensor_flag')}")
 
         # Appliquer transitions
         updates_sm = sm.transition(event, data)
 
+        # if "state" in updates_sm.keys():
+        #     print(f'[main] new state : {updates_sm.get("state", "None")}; previous state : {updates_sm.get("previous_state", "None")}')
+
         # Appliquer les modifications de data
-        if "state" in updates_sm.keys():
-            print(f'[main] new state : {updates_sm.get("state", "None")}; previous state : {updates_sm.get("previous_state", "None")}')
         data.update(updates_sm)
 
-        print(f'[main] data state : {data.get("state")}')
+        # print(f'[main] data state : {data.get("state")}')
 
+        # Attendre un peu avant la prochaine itération
         wait_time = 0.1
-        time.sleep(wait_time)  # Attendre un peu avant la prochaine itération
+        time.sleep(wait_time)  
 
 # Lancer le thread de controle en arrière-plan
 t = threading.Thread(target=control_loop, daemon=True)
