@@ -59,7 +59,10 @@ STATE_COLORS = {
 
 # états où le rond doit clignoter (hors IDLE/STOP)
 BLINK_STATES = {"START","HEATING", "HOLD", "COOLING"}
+BLINK_INTERVAL = 0.5
 
+# 
+TEMP_LIM = 200
 
 # ─────────────────────────────────────────────
 #  WIDGETS RÉUTILISABLES
@@ -86,7 +89,6 @@ class HalcyonIHM:
         self.data = data          # dictionnaire partagé avec main.py
         self.lock = lock
         self._running = True
-        self._chart_t0 = None      # référence temporelle du graphe
         self._blink_visible = True
         self._popup_error_exist = False
         self._last_blink = time.time()
@@ -353,7 +355,7 @@ class HalcyonIHM:
             if len(new_value) > 3:
                 return False
 
-            return int(new_value) <= 200
+            return int(new_value) <= TEMP_LIM
         vcmd_temp = (self.window.register(_validate_temp), "%P")
 
         def _validate_time(new_value):
@@ -395,7 +397,7 @@ class HalcyonIHM:
         _center_frame_temp = tk.Frame(row_temp, bg=BG2)
         _center_frame_temp.pack(expand=True)
 
-        self._spin_temp = tk.Spinbox(_center_frame_temp, from_=20, to=200, increment=5,
+        self._spin_temp = tk.Spinbox(_center_frame_temp, from_=20, to=TEMP_LIM, increment=5,
             textvariable=self._var_temp, width=6,justify="center",
             bg=BG3, fg=FG, font=FONT_BIG,
             buttonbackground=BG3, relief="flat",
@@ -464,7 +466,7 @@ class HalcyonIHM:
         _center_frame_pump = tk.Frame(row_temp_pump, bg=BG2)
         _center_frame_pump.pack(expand=True)
 
-        self._spin_temp_hold = tk.Spinbox(_center_frame_pump, from_=20, to=200, increment=5,
+        self._spin_temp_hold = tk.Spinbox(_center_frame_pump, from_=20, to=TEMP_LIM, increment=5,
             textvariable=self._var_temp_pump, width=6, justify="center",
             bg=BG3, fg=FG, font=FONT_BIG,
             buttonbackground=BG3, relief="flat",
@@ -593,7 +595,7 @@ class HalcyonIHM:
 
 
         self._refresh_popup_error(snapshot_data)
-        self._refresh_time(snapshot_data)
+        self._refresh_time()
         self._refresh_state(snapshot_data)
         self._refresh_cycle_buttons(snapshot_data)
         self._refresh_components(snapshot_data)
@@ -664,7 +666,7 @@ Valider pour fermer la fenêtre."""
                                 command=lambda:self._on_validate_error(popup))
             btn_yes.grid(row = 0, column = 0, padx=(6, 6), pady=4)
 
-    def _refresh_time(self, snapshot_data):
+    def _refresh_time(self):
         # Horloge
         self._lbl_clock.config(text=time.strftime("%d/%m/%Y  %H:%M:%S"))
 
@@ -678,7 +680,7 @@ Valider pour fermer la fenêtre."""
         # Clignotement LED selon état du sytème
         if state in BLINK_STATES:
             now = time.time()
-            if now - self._last_blink >= 0.5:
+            if now - self._last_blink >= BLINK_INTERVAL:
                 self._blink_visible = not self._blink_visible
                 self._last_blink = now
             fill_color = color if self._blink_visible else BG2
@@ -765,8 +767,7 @@ Valider pour fermer la fenêtre."""
         """
         now = time.time()
 
-        # toggle toutes les 0.5 s
-        if now - self._last_blink >= 0.5:
+        if now - self._last_blink >= BLINK_INTERVAL:
             self._blink_visible = not self._blink_visible
             self._last_blink = now
 
@@ -922,58 +923,59 @@ Valider pour fermer la fenêtre."""
     def _update_plot(self, snapshot_data):
         mesures = snapshot_data.get("_all_mesures")
         if not mesures:
-         self._curve_plotted = False
-         return
-
+            self._curve_plotted = False
+            return
+        
         times_raw = mesures.get("Time", [])
         if len(times_raw) < 2:
             self._curve_plotted = False
             return
         self._curve_plotted = True
 
-        # Reset axes
-        self._ax_t.cla()
-        self._ax_t.grid()
-        self._ax_t.set_xlabel("Temps", fontsize=10, color=FG_DIM)
-        self._ax_t.set_ylabel("Température (°C)", fontsize=10, color=FG_DIM)
-
-        # Températures
-        for i, (key, name) in enumerate(zip(self._temp_keys, self._temp_names)):
+        for i, key in enumerate(self._temp_keys):
             vals = mesures.get(key, [])
+
             if vals:
-                self._ax_t.plot(times_raw[-len(vals):], vals, color=self._temp_colors[i], linewidth=1.2, label=name)
+                self._temp_lines[i].set_data(times_raw,vals)
 
         self._ax_t.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M:%S'))
         self._ax_t.xaxis.set_major_locator(mdates.AutoDateLocator())
         self._fig.autofmt_xdate()
 
-        self._ax_t.legend(loc="upper left", fontsize=8, facecolor=BG3, framealpha=0.8, edgecolor="#CCCCCC")
-
         # Pression
         if snapshot_data["PUMP_ACTIVATION"]:
-            if not hasattr(self, "_ax_p") or self._ax_p is None:
+            self._fig.suptitle("COURBES TEMPERATURES ET PRESSION", fontsize=15, color=FG_DIM)
+            # Crée l'axe pression s'il existe pas
+            if self._ax_p is None:
                 self._ax_p = self._ax_t.twinx()
-
-            self._ax_p.cla()
-            self._ax_p.set_ylabel("Pression (bar)", fontsize=10, color=FG_DIM)
+                self._ax_p.set_ylabel("Pression (bar)", fontsize=10, color=FG_DIM)
+                self._ax_p.legend(loc="upper right", fontsize=8, facecolor=BG3,framealpha=0.8, edgecolor="#CCCCCC")
 
             press = mesures.get("press_vide", [])
-            valid = [v for v in press if isinstance(v, float)]
 
-            if valid:
-                self._ax_p.plot(times_raw[-len(valid):], valid, color=self._press_color, linewidth=1.0, linestyle="--", label="Pression")
-            else:
-                self._ax_p.plot([], [], linestyle="--", label="Pression")
+            valid_press = [v if isinstance(v, float) else None for v in press]
 
-            self._ax_t.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M:%S'))
-            self._ax_t.xaxis.set_major_locator(mdates.AutoDateLocator())
-            self._fig.autofmt_xdate()  # incline les labels
-            self._ax_p.legend(loc="upper right", fontsize=8, facecolor=BG3, framealpha=0.8, edgecolor="#CCCCCC")
+            self._press_line.set_data(times_raw, valid_press)
+
+            self._ax_p.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M:%S'))
+            self._ax_p.xaxis.set_major_locator(mdates.AutoDateLocator())
+            self._fig.autofmt_xdate()
 
         else:
-            if hasattr(self, "_ax_p") and self._ax_p:
-                self._ax_p.remove()
-                self._ax_p = None
+            self._fig.suptitle("COURBES TEMPERATURES", fontsize=15, color=FG_DIM)
+            # Supprime l'axe pression s'il existe 
+            print(f"[ihm] _ax_p {self._ax_p}")
+            if self._ax_p is not None:
+                self._ax_p.cla()
+
+        
+
+        self._ax_t.relim()
+        self._ax_t.autoscale_view()
+
+        if self._ax_p:
+            self._ax_p.relim()
+            self._ax_p.autoscale_view()
 
     def _set_cycle_lock(self, locked: bool):
         """Grise ou déverrouille les widgets du formulaire cycle."""
@@ -1073,9 +1075,8 @@ Valider pour fermer la fenêtre."""
             self._var_temp_pump.set(self.data.get("TEMP_STOP_PUMP", 70))
 
         # Reset courbes
-
         self._ax_t.remove()
-        if hasattr(self, "_ax_p") and self._ax_p:
+        if self._ax_p is not None:
             self._ax_p.remove()
             
         self._fig.clear()
@@ -1096,6 +1097,14 @@ Valider pour fermer la fenêtre."""
 
         # Active le bouton pump
         self._toggle_pump()
+
+        # Reset données internes
+        self._running = True
+        self._blink_visible = True
+        self._popup_error_exist = False
+        self._last_blink = time.time()
+        self._curve_plotted = False
+        self._cycle_locked = False
 
 
 # ─────────────────────────────────────────────
