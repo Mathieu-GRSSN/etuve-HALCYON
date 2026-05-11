@@ -1,6 +1,7 @@
 from datetime import datetime
 import copy
 import utils.save as us
+import utils.mail_sender as ms
 
 class StateMachine:
     def __init__(self, relais, capteurs, ihm, data, logger):
@@ -170,20 +171,32 @@ class StateMachine:
             pressure = self.data["PUMP_ACTIVATION"]
 
             # Enregistre sous PNG les courbes
-            save_graph = us.save_graph(all_mesures,pressure)
+            save_graph, filepath_png = us.save_graph(all_mesures,pressure)
             if save_graph == 1:
                 self.logger.info(f'Données sauvegarder en PNG')
             elif save_graph == 0:
                 self.logger.error(f"Enregistrement des données en PNG échoué")
 
             # Enregistre sous CSV les données
-            save_mesures = us.save_all_mesures(all_mesures)
+            save_mesures, filepath_csv = us.save_all_mesures(all_mesures)
             if save_mesures == 1:
                 self.logger.info(f'Données sauvegarder en CSV')
             elif save_mesures == 0:
                 self.logger.error(f"Enregistrement des données en CSV échoué")
 
+            # Envoie par mail
+            receiver_email = "mathieu.grossin@halcyon-performance.com"
+            subject = "TEST subject"
+            body = "TEST body"
+            send_mail = ms.send_email(receiver_email,subject,body,filepath_csv, filepath_png)
+            if send_mail == 1:
+                self.logger.info(f'PNG et CSV envoyé par mail à {receiver_email}')
+            elif send_mail == 0:
+                self.logger.error(f"Envoie PNG et CVS échoué")
+
             return update
+        
+
 
     # -------
     # IN STATE : Execute les actions qui ont lieux durant l'état

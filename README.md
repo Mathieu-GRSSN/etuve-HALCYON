@@ -65,7 +65,8 @@ L'application fonctionne en local sur la Raspberry Pi.
 - hardware/capteur.py : lecture TC-08
 - ihm/app.py : interface tkinter
 - utils/logger.py : gestion des logs
-- simulation.py : remplace les capteurs par des valeurs simulées pour tester le programme
+- utils/save.py : enregistrement des données en CSV et PNG
+- utils/mail_sender.py : envoie le CSV et PNG par mail
 
 # Fonctionnement du système
 

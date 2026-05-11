@@ -39,11 +39,11 @@ def save_all_mesures(mesures):
         df = pd.DataFrame(mesures)
         df.to_csv(filepath, index = False, sep=";", encoding = 'utf-8') # exporte les données dans un csv
 
-        return 1
+        return 1, filepath
     
     except Exception as e:
         print(e)
-        return 0
+        return 0, None
 
 def save_graph(mesures, pressure):
 
@@ -127,8 +127,8 @@ def save_graph(mesures, pressure):
         # libérer la mémoire 
         plt.close(fig)  
 
-        return 1
+        return 1, filepath
 
     except Exception as e:
         print(e)
-        return 0
+        return 0, None
