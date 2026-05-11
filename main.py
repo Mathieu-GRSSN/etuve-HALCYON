@@ -88,13 +88,17 @@ def control_loop():
         wait_time = 0.1
         time.sleep(wait_time)  
 
-# Lancer le thread de controle en arrière-plan
-t = threading.Thread(target=control_loop, daemon=True)
-t.start()
+try :
+    # Lancer le thread de controle en arrière-plan
+    t = threading.Thread(target=control_loop, daemon=True)
+    t.start()
 
-# Lancer l'IHM dans le thread principal (obligatoire pour Tkinter)
-logger.info("Ouverture IHM")
-ihm.run()
-logger.info("Fermeture IHM")
-
-relais.cleanup()
+    # Lancer l'IHM dans le thread principal (obligatoire pour Tkinter)
+    logger.info("Ouverture IHM")
+    ihm.run()
+    logger.info("Fermeture IHM")
+except Exception as e:
+    print(e)
+    logger.error(f"Erreur dans le main")
+finally:
+    relais.cleanup()

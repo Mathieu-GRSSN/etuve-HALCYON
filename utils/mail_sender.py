@@ -10,7 +10,7 @@ def send_email(receiver_email,subject,body,attachment_csv=None, attachement_png 
     SMTP_PORT = 465
 
     SENDER_EMAIL = "mathieu.grossin@halcyon-performance.com"
-    SENDER_PASSWORD = "260202"
+    SENDER_PASSWORD = "XXXXXX"
 
     # Vérifiaction mail correct
 
