@@ -136,7 +136,7 @@ class Capteur:
         
         # Renvoie toutes les mesures pour mise à jour affichage
         with self.lock:
-            mesures["_all_mesures"] = self.all_mesures
+            mesures["_all_mesures"] = {k: list(v) for k, v in self.all_mesures.items()}
 
         return mesures
 
@@ -160,4 +160,4 @@ class Capteur:
 
     def get_all_mesures(self):
         with self.lock:
-            return self.all_mesures
+            return {k: list(v) for k, v in self.all_mesures.items()}

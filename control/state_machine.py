@@ -2,14 +2,15 @@ from datetime import datetime
 import copy
 import utils.save as us
 import utils.mail_sender as ms
+import threading
 
 class StateMachine:
-    def __init__(self, relais, capteurs, ihm, data, logger):
+    def __init__(self, relais, capteurs, ihm, data, logger, lock):
         self.data_initial = copy.deepcopy(data) # sauvegarde des valeurs initiles
         self.relais = relais
         self.capteurs = capteurs
         self.ihm = ihm
-        self.states = {
+        self.states_fonc = {
             "IDLE": self.idle_state,
             "START": self.start_state,
             "HEATING": self.heating_state,
@@ -18,53 +19,55 @@ class StateMachine:
             "STOP": self.stop_state,
         }
         self.logger = logger
+        self.lock = lock
         
     # -------
     # TRANSITION : vérifie la condition de transition d'état, renvoie les modifications de data
     # -------
     def transition(self, event, data):
-        self.data = data
+        self.data = dict(data)
         update = {}
+
+        with self.lock:
+            self.data = dict(data)
 
         if event == 'force_stop':
 
             self.logger.warning(f'Arret forcé')
-
             update["state"] = "STOP"
             self.on_enter("STOP")
             return update
-        
+            
         if event == 'stop_heat':
 
             self.logger.warning(f'Température maximale atteinte (200°C)')
-
             update = self.stop_heat() 
             return update
-        
+            
         if event == 'error_sensor':
 
             self.logger.error("ERROR SENSOR")
-
             update["state"] = "ERROR_SENSOR"
             self.on_enter("ERROR_SENSOR")
             return update
 
-        
+            
         if event in ['cycle_validated','end_init', 'temperature_reached', 'time_reached','temperature_low', 'cycle_end']:
-            new_state = self.states[self.data["state"]](event)
+            new_state = self.states_fonc[self.data["state"]](event)
 
             if new_state != self.data["state"]:
                 update = self.on_enter(new_state)
                 update["state"] = new_state
                 self.logger.info(f'Transition: {update["previous_state"]} -> {update["state"]}')
+                return update
+                    
                 
-            
         elif event == 'no_transition':
             update = self.in_state(self.data["state"])
-                    
+            return update
+                        
         else:
             print(f"Invalid event: {event}")
-            # retourner error event dans update ou rappeler transition avec event error
         return update
 
     # -------
@@ -170,29 +173,8 @@ class StateMachine:
             all_mesures = self.capteurs.get_all_mesures()
             pressure = self.data["PUMP_ACTIVATION"]
 
-            # Enregistre sous PNG les courbes
-            save_graph, filepath_png = us.save_graph(all_mesures,pressure)
-            if save_graph == 1:
-                self.logger.info(f'Données sauvegarder en PNG')
-            elif save_graph == 0:
-                self.logger.error(f"Enregistrement des données en PNG échoué")
-
-            # Enregistre sous CSV les données
-            save_mesures, filepath_csv = us.save_all_mesures(all_mesures)
-            if save_mesures == 1:
-                self.logger.info(f'Données sauvegarder en CSV')
-            elif save_mesures == 0:
-                self.logger.error(f"Enregistrement des données en CSV échoué")
-
-            # Envoie par mail
-            receiver_email = "mathieu.grossin@halcyon-performance.com"
-            subject = "TEST subject"
-            body = "TEST body"
-            send_mail = ms.send_email(receiver_email,subject,body,filepath_csv, filepath_png)
-            if send_mail == 1:
-                self.logger.info(f'PNG et CSV envoyé par mail à {receiver_email}')
-            elif send_mail == 0:
-                self.logger.error(f"Envoie PNG et CVS échoué")
+            # Lance le thread d'enregistrement et d'envoie mail (pour éviter de bloquer l'interface)
+            threading.Thread(target=self._save_and_send,args=(all_mesures, pressure),daemon=True).start()
 
             return update
         
@@ -297,3 +279,28 @@ class StateMachine:
         mesure = self.capteurs.lire_instantane()
         update.update(mesure)
         return update
+    
+    def _save_and_send(self, all_mesures, pressure):
+            # Enregistre sous PNG les courbes
+            save_graph, filepath_png = us.save_graph(all_mesures,pressure)
+            if save_graph == 1:
+                self.logger.info(f'Données sauvegarder en PNG')
+            elif save_graph == 0:
+                self.logger.error(f"Enregistrement des données en PNG échoué")
+
+            # Enregistre sous CSV les données
+            save_mesures, filepath_csv = us.save_all_mesures(all_mesures)
+            if save_mesures == 1:
+                self.logger.info(f'Données sauvegarder en CSV')
+            elif save_mesures == 0:
+                self.logger.error(f"Enregistrement des données en CSV échoué")
+
+            # Envoie par mail
+            receiver_email = "mathieu.grossin@halcyon-performance.com"
+            subject = "TEST subject"
+            body = "TEST body"
+            send_mail = ms.send_email(receiver_email,subject,body,filepath_csv, filepath_png)
+            if send_mail == 1:
+                self.logger.info(f'PNG et CSV envoyé par mail à {receiver_email}')
+            elif send_mail == 0:
+                self.logger.error(f"Envoie PNG et CVS échoué")

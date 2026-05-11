@@ -588,25 +588,29 @@ class HalcyonIHM:
     # ────────────────────────────────────────────
     def _start_refresh(self):
 
-        self._refresh_popup_error()
-        self._refresh_time()
-        self._refresh_state()
-        self._refresh_cycle_buttons()
-        self._refresh_components()
-        self._refresh_btn_start_stop()
-        self._refresh_data()
-        self._refresh_curve()
+        with self.lock:
+            snapshot_data = dict(self.data)
+
+
+        self._refresh_popup_error(snapshot_data)
+        self._refresh_time(snapshot_data)
+        self._refresh_state(snapshot_data)
+        self._refresh_cycle_buttons(snapshot_data)
+        self._refresh_components(snapshot_data)
+        self._refresh_btn_start_stop(snapshot_data)
+        self._refresh_data(snapshot_data)
+        self._refresh_curve(snapshot_data)
 
         # fréquence rafraichissement
         self._refresh_freq = 100
         self.window.after(round(self._refresh_freq), self._start_refresh) 
 
-    def _refresh_popup_error(self):
+    def _refresh_popup_error(self, snapshot_data):
         """
         Affiche un popup s'il y a une erreur
         """
 
-        if not self.data.get("error_sensor_flag"):
+        if not snapshot_data.get("error_sensor_flag"):
             self._popup_error_exist = False
             return
         else :
@@ -660,14 +664,14 @@ Valider pour fermer la fenêtre."""
                                 command=lambda:self._on_validate_error(popup))
             btn_yes.grid(row = 0, column = 0, padx=(6, 6), pady=4)
 
-    def _refresh_time(self):
+    def _refresh_time(self, snapshot_data):
         # Horloge
         self._lbl_clock.config(text=time.strftime("%d/%m/%Y  %H:%M:%S"))
 
-    def _refresh_state(self):
+    def _refresh_state(self, snapshot_data):
 
         # État du sytème
-        state = self.data.get("state")
+        state = snapshot_data.get("state")
         color = STATE_COLORS.get(state)
         self._lbl_state.config(text=state, fg=color)
 
@@ -684,19 +688,19 @@ Valider pour fermer la fenêtre."""
             fill_color = color
         self._canvas_led.itemconfig(self._led, fill=fill_color)
 
-    def _refresh_data(self):
+    def _refresh_data(self, snapshot_data):
         '''
         Données affichées uniquement hors IDLE et STOP
         '''
-        if self.data["state"] == "IDLE":
+        if snapshot_data["state"] == "IDLE":
             data_active = False
-        elif self.data["state"] == "STOP":
+        elif snapshot_data["state"] == "STOP":
             data_active = False
         else:
             data_active = True
 
         # Redessiner seulement si un nouveau point est arrivé
-        mesures = self.data.get("_all_mesures")
+        mesures = snapshot_data.get("_all_mesures")
         n = len(mesures.get("Time", []))
         if n <= getattr(self, "_last_plot_data_n", -1):
             return  # rien de nouveau, on ne redessine pas
@@ -704,13 +708,13 @@ Valider pour fermer la fenêtre."""
 
         if data_active:
             # Températures et pression
-            t1 = self.data.get("temp1", 0)
-            t2 = self.data.get("temp2", 0)
-            t3 = self.data.get("temp3", 0)
-            t4 = self.data.get("temp4",0)
-            t5 = self.data.get("temp5",0)
-            t6 = self.data.get("temp6",0)
-            t7 = self.data.get("temp7",0)
+            t1 = snapshot_data.get("temp1", 0)
+            t2 = snapshot_data.get("temp2", 0)
+            t3 = snapshot_data.get("temp3", 0)
+            t4 = snapshot_data.get("temp4",0)
+            t5 = snapshot_data.get("temp5",0)
+            t6 = snapshot_data.get("temp6",0)
+            t7 = snapshot_data.get("temp7",0)
             self._lbl_temp1["val"].config(text=f"{t1:.1f}")
             self._lbl_temp2["val"].config(text=f"{t2:.1f}")
             self._lbl_temp3["val"].config(text=f"{t3:.1f}")
@@ -718,8 +722,8 @@ Valider pour fermer la fenêtre."""
             self._lbl_temp5["val"].config(text=f"{t5:.1f}")
             self._lbl_temp6["val"].config(text=f"{t6:.1f}")
             self._lbl_temp7["val"].config(text=f"{t7:.1f}")
-            if self.data["PUMP_ACTIVATION"]:
-                press = self.data.get("press_vide", 0)
+            if snapshot_data["PUMP_ACTIVATION"]:
+                press = snapshot_data.get("press_vide", 0)
                 if press is None:
                     text_press = "None"
                 else:
@@ -738,10 +742,10 @@ Valider pour fermer la fenêtre."""
             self._lbl_temp7["val"].config(text="---")
             self._lbl_press["val"].config(text="---")
         
-    def _refresh_curve(self):
+    def _refresh_curve(self, snapshot_data):
         # Redessine les courbes que hors IDLE STOP
-        if self.data["state"] not in ["IDLE", "STOP"]:
-            mesures = self.data.get("_all_mesures")
+        if snapshot_data["state"] not in ["IDLE", "STOP"]:
+            mesures = snapshot_data.get("_all_mesures")
             if not mesures:
                 return
  
@@ -754,7 +758,7 @@ Valider pour fermer la fenêtre."""
             self._update_plot()
             self._chart_canvas.draw_idle()
 
-    def _refresh_components(self):
+    def _refresh_components(self, snapshot_data):
         """
         Gris  = composant à l'arret  (False)
         Vert = composant en marche  (True)
@@ -782,7 +786,7 @@ Valider pour fermer la fenêtre."""
             # LED
             cvs.itemconfig(dot, fill=color)
 
-    def _refresh_cycle_buttons(self):
+    def _refresh_cycle_buttons(self, snapshot_data):
         """
             Si state différent de IDLE, choix cycle grisé
         """
@@ -790,23 +794,23 @@ Valider pour fermer la fenêtre."""
         state_entry = "normal" if self._var_pump.get() else "disabled"
         self._spin_temp_hold.config(state=state_entry, bg=BG3 if self._var_pump.get() else DISABLE_BG)
 
-        if self.data['state'] != self.data['previous_state']:
-            if self.data["state"] == "IDLE":
+        if snapshot_data['state'] != snapshot_data['previous_state']:
+            if snapshot_data["state"] == "IDLE":
                 self._cycle_locked = False
                 self._set_cycle_lock(False)
             else:
                 self._cycle_locked = True
                 self._set_cycle_lock(True)
 
-    def _refresh_btn_start_stop(self):
+    def _refresh_btn_start_stop(self,snapshot_data):
         
-        if self.data["state"] == "IDLE":
+        if snapshot_data["state"] == "IDLE":
             state_btn = "disabled"
             text_btn = "START"
             bg_btn = DISABLE_BG
             fg_btn = DISABLE_FG
         
-        elif self.data["state"] == "START":
+        elif snapshot_data["state"] == "START":
             if self._curve_plotted == True:
                 text_btn = "START"
                 state_btn = "normal"
@@ -818,7 +822,7 @@ Valider pour fermer la fenêtre."""
         else:
             text_btn = "STOP"
             
-            if self.data["state"] == "STOP":
+            if snapshot_data["state"] == "STOP":
                 state_btn = "disabled"
                 bg_btn = DISABLE_BG
                 fg_btn = DISABLE_FG
