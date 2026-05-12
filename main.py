@@ -42,6 +42,7 @@ data = {
     "TIME_HOLD": 10,
     "PUMP_ACTIVATION": False,
     "TEMP_STOP_PUMP": 35,
+    "RECEIVER_MAIL": "mathieu.grossin@halcyon-performance.com",
     "time_start_hold": None,
     "state": "IDLE",
     "previous_state": None,

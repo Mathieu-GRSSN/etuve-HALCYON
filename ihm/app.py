@@ -64,6 +64,12 @@ BLINK_INTERVAL = 0.5
 # 
 TEMP_LIM = 200
 
+# Titres possibles du graphe
+TITLE_GRAPH=[
+    "COURBES TEMPERATURES ET PRESSION",
+    "COURBES TEMPERATURES"
+]
+
 # ─────────────────────────────────────────────
 #  WIDGETS RÉUTILISABLES
 # ─────────────────────────────────────────────
@@ -94,6 +100,7 @@ class HalcyonIHM:
         self._last_blink = time.time()
         self._curve_plotted = False
         self._cycle_locked = False
+        self._title_used = 0
 
         self._build_window() # Crée la fenetre 
         self._build_layout() # Rempli la fenetre
@@ -275,7 +282,8 @@ class HalcyonIHM:
         self._ax_p = self._ax_t.twinx()
         self._ax_p.set_ylabel("Pression (bar)", fontsize=10, color=FG_DIM)
 
-        self._fig.suptitle("COURBES TEMPERATURES ET PRESSION", fontsize=15, color=FG_DIM)
+        self._title_used = 0
+        self._fig.suptitle(TITLE_GRAPH[self._title_used], fontsize=15, color=FG_DIM)
 
         canvas = FigureCanvasTkAgg(self._fig, master=inner)
         canvas.get_tk_widget().pack(fill="both", expand=True)
@@ -862,6 +870,7 @@ Valider pour fermer la fenêtre."""
             self.data["TIME_HOLD"]       = int(self._var_hold.get())
             self.data["PUMP_ACTIVATION"] = self._var_pump.get()
             self.data["TEMP_STOP_PUMP"]  = int(self._var_temp_pump.get()) if self._var_pump.get() else 0
+            self.data["RECEIVER_MAIL"]   = self._var_mail.get()
 
             # signal pour l'event_manager
             self.data["cycle_validated_flag"] = True
@@ -943,7 +952,12 @@ Valider pour fermer la fenêtre."""
      
         # Pression
         if snapshot_data["PUMP_ACTIVATION"]:
-            self._fig.suptitle("COURBES TEMPERATURES ET PRESSION", fontsize=15, color=FG_DIM)
+
+            # Change le titre du graphe si mauvais
+            if self._title_used == 1:
+                self._title_used=0
+                self._fig.suptitle(TITLE_GRAPH[self._title_used], fontsize=15, color=FG_DIM)
+
             # Crée l'axe pression s'il existe pas
             if self._ax_p is None:
                 self._ax_p = self._ax_t.twinx()
@@ -957,7 +971,12 @@ Valider pour fermer la fenêtre."""
             self._press_line.set_data(times_raw, valid_press)
          
         else:
-            self._fig.suptitle("COURBES TEMPERATURES", fontsize=15, color=FG_DIM)
+
+            # Change le titre du graphe si mauvais
+            if self._title_used == 0:
+                self._title_used=1
+                self._fig.suptitle(TITLE_GRAPH[self._title_used], fontsize=15, color=FG_DIM)
+
             # Supprime l'axe pression s'il existe 
             if self._ax_p is not None:
                 self._ax_p.cla()
@@ -1011,7 +1030,7 @@ Valider pour fermer la fenêtre."""
         """
         popup = tk.Toplevel(self.window, bg=BG)
         popup.title("Confirmation du cycle")
-        popup.geometry("600x400")
+        popup.geometry("700x400")
         popup.transient(self.window)
         popup.grab_set()
         popup.focus_set()
@@ -1031,15 +1050,16 @@ Valider pour fermer la fenêtre."""
         text_label.rowconfigure(3, weight=1)
 
         text = {
-            "Température cible": f"{self._var_temp.get()} °C",
-            "Durée": f"{self._var_hold.get()} min",
-            "Pompe": "Oui" if self._var_pump.get() else "Non",
-            "Température arrêt pompe": f"{self._var_temp_pump.get()} °C" if self._var_pump.get() else "N/A"
+            "Température cible": [f"{self._var_temp.get()} °C", FONT_BIG],
+            "Durée": [f"{self._var_hold.get()} min", FONT_BIG],
+            "Pompe": ["Oui" if self._var_pump.get() else "Non", FONT_BIG],
+            "Température arrêt pompe": [f"{self._var_temp_pump.get()} °C" if self._var_pump.get() else "N/A", FONT_BIG],
+            "Mail de réception": [f"{self._var_mail.get()}", FONT_LABEL],
         }
 
         for i, (key, value) in enumerate(text.items()):
             tk.Label(text_label, text=key, bg=BG2, fg=FG_DIM, font=FONT_MED).grid(row=i, column=0, sticky="w", padx=(0, 6), pady=4)
-            tk.Label(text_label, text=value, bg=BG2, fg=FG, font=FONT_BIG).grid(row=i, column=1, sticky="w", padx=(6, 0), pady=4)
+            tk.Label(text_label, text=value[0], bg=BG2, fg=FG, font=value[1]).grid(row=i, column=1, sticky="w", padx=(6, 0), pady=4)
 
         # Boutons
         btn_frame = tk.Frame(inner, bg=BG2)
@@ -1073,6 +1093,7 @@ Valider pour fermer la fenêtre."""
             self._var_hold.set(self.data.get("TIME_HOLD", 30))
             self._var_pump.set(bool(self.data.get("PUMP_ACTIVATION", True)))
             self._var_temp_pump.set(self.data.get("TEMP_STOP_PUMP", 70))
+            self._var_mail.set(self.data.get("RECEIVER_MAIL", "mathieu.grossin@halcyon-performance.com"))
 
         # Reset courbes
         self._ax_t.remove()
@@ -1084,7 +1105,8 @@ Valider pour fermer la fenêtre."""
         self._ax_t.grid()
         self._ax_t.set_xlabel("Temps", fontsize=10, color=FG_DIM)
         self._ax_t.set_ylabel("Température (°C)", fontsize=10, color=FG_DIM)
-        self._fig.suptitle("COURBES TEMPERATURES ET PRESSION", fontsize=15, color=FG_DIM)
+        self._title_used=0
+        self._fig.suptitle(TITLE_GRAPH[self._title_used], fontsize=15, color=FG_DIM)
         self._ax_p = self._ax_t.twinx()
         self._ax_p.set_ylabel("Pression (bar)", fontsize=10, color=FG_DIM)
 
