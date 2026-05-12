@@ -92,7 +92,7 @@ flowchart LR
     MAIN --> IHM[ihm/]
     MAIN --> UTILS[utils/]
 
-    CONTROL --> EVENT[event_manager.py]
+    CONTROL --> EVENT[event_manager.py<br/><small>Gestion des �v�nements syst�me</small>]
     CONTROL --> STATE[state_machine.py]
 
     HARDWARE --> CAPTEUR[capteur.py]
