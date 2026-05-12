@@ -642,9 +642,9 @@ class HalcyonIHM:
             text_label.rowconfigure(0, weight=1)    
 
             text = """
-Une erreur a été détectée lors de la configuration du TC-08.
+Une erreur a été détectée avec le TC-08.
 
-Veuillez vérifier les branchements et réessayer.
+Veuillez vérifier les branchements et relancer le cycle.
 
 Valider pour fermer la fenêtre."""
 
@@ -710,17 +710,22 @@ Valider pour fermer la fenêtre."""
 
         if data_active:
             # Températures et pression
-            t = []
+            t = [0]
+            text_temp = [0]
             for i in range(1,8):
                 t.append(snapshot_data.get(f"temp{i}", 0))
+                if t[i] is None:
+                    text_temp.append("None")
+                else:
+                    text_temp.append(f"{t[i]:.1f}")
 
-            self._lbl_temp1["val"].config(text=f"{t[0]:.1f}")
-            self._lbl_temp2["val"].config(text=f"{t[1]:.1f}")
-            self._lbl_temp3["val"].config(text=f"{t[2]:.1f}")
-            self._lbl_temp4["val"].config(text=f"{t[3]:.1f}")
-            self._lbl_temp5["val"].config(text=f"{t[4]:.1f}")
-            self._lbl_temp6["val"].config(text=f"{t[5]:.1f}")
-            self._lbl_temp7["val"].config(text=f"{t[6]:.1f}")
+            self._lbl_temp1["val"].config(text=text_temp[1])
+            self._lbl_temp2["val"].config(text=text_temp[2])
+            self._lbl_temp3["val"].config(text=text_temp[3])
+            self._lbl_temp4["val"].config(text=text_temp[4])
+            self._lbl_temp5["val"].config(text=text_temp[5])
+            self._lbl_temp6["val"].config(text=text_temp[6])
+            self._lbl_temp7["val"].config(text=text_temp[7])
             if snapshot_data["PUMP_ACTIVATION"]:
                 press = snapshot_data.get("press_vide", 0)
                 if press is None:
@@ -953,7 +958,6 @@ Valider pour fermer la fenêtre."""
         else:
             self._fig.suptitle("COURBES TEMPERATURES", fontsize=15, color=FG_DIM)
             # Supprime l'axe pression s'il existe 
-            print(f"[ihm] _ax_p {self._ax_p}")
             if self._ax_p is not None:
                 self._ax_p.cla()
       

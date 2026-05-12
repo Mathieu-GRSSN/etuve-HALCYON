@@ -72,6 +72,8 @@ def control_loop():
         with lock:
             event, update_em = em.generate_events(data)
             data.update(update_em) # Applique les modif de data
+            if data["state"]=="ERROR_SENSOR":
+                print(f"[main] ERROR_SENSOR event : {event}")
 
         # Appliquer transitions
         updates_sm = sm.transition(event, data)

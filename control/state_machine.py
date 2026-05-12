@@ -120,7 +120,12 @@ class StateMachine:
         update["state"] = self.data["state"]
 
         if state == "ERROR_SENSOR":
-            self.relais.all_relay_off()
+            if self.data["ventilation_activated"] or self.data["P1_activated"] or self.data["P2_activated"] or self.data["pump_activated"]:
+                self.relais.all_relay_off()
+                update["ventilation_activated"] = False
+                update["P1_activated"] = False
+                update["P2_activated"] = False
+                update["pump_activated"] = False
             return update
 
         if state == "IDLE":
@@ -230,11 +235,11 @@ class StateMachine:
             temp_min_tool = min(self.data["temp1"], self.data["temp2"])
             # print(f'[state_machine] temp_min_tool : {temp_min_tool} temp cible : {self.data.get("TEMP_CIBLE")}')
 
-            if temp_min_tool < self.data.get("TEMP_CIBLE") - 2:
+            if temp_min_tool < self.data.get("TEMP_CIBLE") - 2 and not self.data["P1_activated"]:
                 self.relais.heating_P1_on()
                 update["P1_activated"] = True
                 
-            elif temp_min_tool > self.data.get("TEMP_CIBLE") + 2:
+            elif temp_min_tool > self.data.get("TEMP_CIBLE") + 2 and self.data["P1_activated"]:
                 self.relais.heating_P1_off()
                 update["P1_activated"] = False
 

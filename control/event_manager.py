@@ -13,34 +13,41 @@ class EventManager:
         # CYCLE
         # =========================
         
+        # liste des température de data
         temp_list = []
-        for i in [1,7]:
-            temp_list.append(data.get(f"temp{i}"))
-            if data.get(f"temp{i}") is None:
-                update['error_sensor_flag'] = True
-                event='error_sensor'
-                return event, update
+        for i in range(1,8):
+                temp_list.append(data.get(f"temp{i}"))
 
-
+        # Si le flag d'arret forcé détecté -> force_stop
         if data.get("force_stop_flag"):
             update["force_stop_flag"] = False
             event = 'force_stop'
             return event, update
         
-        if max(temp_list)>=200:
-            event='stop_heat'
-            return event, update
-
-        if data.get("min_interval_sensor") != None:
-            if data.get("min_interval_sensor")<0:
+        # Si la machine n'est pas en été d'error sensor, vérifie s'il n'y a pas de problème
+        if data.get('error_sensor_flag') == False :
+            # Si une des valeurs est None (pas captée) -> error_sensor
+            if None in temp_list:
                 update['error_sensor_flag'] = True
                 event='error_sensor'
                 return event, update
-
+            
+            # Si l'interval minimum du capteur est <0 -> error_sensor (vérifie d'abord que pas None car réglage de base)
+            if data.get("min_interval_sensor") != None:
+                if data.get("min_interval_sensor")<0:
+                    update['error_sensor_flag'] = True
+                    event='error_sensor'
+                    return event, update
+                
+        # Si la température maximale atteinte (200°C) -> stop_heat (vérifie d'abord None pour éviter problème lors error_sensor)
+        if not None in temp_list:
+            if max(temp_list)>=200:
+                event='stop_heat'
+                return event, update
+                
         if data.get("state") == "ERROR_SENSOR":
             if data.get("error_sensor_flag"):
                 event = "no_transition"
-
             else:
                 event = 'end_error'
             return event, update
