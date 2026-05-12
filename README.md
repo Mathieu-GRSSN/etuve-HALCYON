@@ -57,28 +57,7 @@ L'application fonctionne en local sur la Raspberry Pi.
 **Fréquence d'acquisition**
 - acquisition TC-08 : 1.1hz (Interval de 900ms)
 
-## Prérequis logiciel
-- Python
-- picosdk (https://github.com/picotech/picosdk-python-wrappers/tree/master), gestion du TC-08
-- RPi.GPIO, gestion des bornes GPIO
-- pandas, gestion CSV
-- tkinter, gestion interface
-- time
-- threading
-
- smtplib
- email 
- mimetypes
-copy
-  logging
- logging
-ctypes
- datetime  
- matplotlib
- matplotlib
- os
-
- ## Bibliothèques utilisées dans le projet
+## Bibliothèques utilisées dans le projet
 
 Le projet est codé entièrement en python.
 
@@ -95,11 +74,57 @@ Le projet est codé entièrement en python.
 | `picosdk` | [SDK de Pico Technology](https://github.com/picotech/picosdk-python-wrappers/tree/master)  |
 | `RPi.GPIO` | contrôle des GPIO du Raspberry Pi 5 |
 | `smtplib` | Envoi d'emails via protocole SMTP |
-| `threading` | Exécution multitche avec des threads pour faire fonctionner plusieurs t�ches en parall�le (IHM, acquisition, s�curit�). |
-| `time` | Gestion du temps (temporisations, d�lais, mesure de dur�e�). |
-| `tkinter` | Cr�ation de l�interface graphique (fen�tres, boutons, graphiques, widgets�). |
+| `threading` | Exécution multitache en parallèle |
+| `time` | Gestion du temps |
+| `tkinter` | Création de l'interface graphique |
 
 ## Architecture logicielle
+
+## Architecture logicielle
+
+```mermaid
+flowchart TD
+
+    MAIN[main.py]
+    SM[state_machine.py]
+
+    subgraph Hardware
+        RELAIS[hardware/relais.py]
+        CAPTEUR[hardware/capteur.py]
+    end
+
+    subgraph Interface
+        APP[ihm/app.py]
+    end
+
+    subgraph Utils
+        LOGGER[utils/logger.py]
+        SAVE[utils/save.py]
+        MAIL[utils/mail_sender.py]
+    end
+
+    MAIN --> SM
+    MAIN --> APP
+
+    SM --> RELAIS
+    SM --> CAPTEUR
+
+    APP --> SM
+    APP --> CAPTEUR
+
+    CAPTEUR --> SAVE
+    LOGGER --> SAVE
+
+    SAVE --> MAIL
+```
+
+```mermaid
+  graph TD;
+      A-->B;
+      A-->C;
+      B-->D;
+      C-->D;
+```
 
 - main.py : boucle principale
 - state_machine.py : gestion des états
