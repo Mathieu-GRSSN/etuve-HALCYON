@@ -83,18 +83,27 @@ Le projet est codé entièrement en python.
 ## Architecture logicielle
 
 ```mermaid
-flowchart TB
+flowchart LR
 
     MAIN[main.py]
 
     MAIN --> CONTROL[control/]
     MAIN --> HARDWARE[hardware/]
+    MAIN --> IHM[ihm/]
+    MAIN --> UTILS[utils/]
 
     CONTROL --> EVENT[event_manager.py]
     CONTROL --> STATE[state_machine.py]
 
     HARDWARE --> CAPTEUR[capteur.py]
     HARDWARE --> RELAIS[relais.py]
+
+    IHM --> APP[app.py]
+
+    UTILS --> LOGGER[logger.py]
+    UTILS --> SEND[mail_sender.py]
+    UTILS --> SAVE[save.py]
+
 ```
 
 
