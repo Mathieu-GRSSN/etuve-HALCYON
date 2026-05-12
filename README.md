@@ -83,48 +83,20 @@ Le projet est codé entièrement en python.
 ## Architecture logicielle
 
 ```mermaid
-flowchart TD
+flowchart TB
 
     MAIN[main.py]
-    SM[state_machine.py]
 
-    subgraph Hardware
-        RELAIS[hardware/relais.py]
-        CAPTEUR[hardware/capteur.py]
-    end
+    MAIN --> CONTROL[control/]
+    MAIN --> HARDWARE[hardware/]
 
-    subgraph Interface
-        APP[ihm/app.py]
-    end
+    CONTROL --> EVENT[event_manager.py]
+    CONTROL --> STATE[state_machine.py]
 
-    subgraph Utils
-        LOGGER[utils/logger.py]
-        SAVE[utils/save.py]
-        MAIL[utils/mail_sender.py]
-    end
-
-    MAIN --> SM
-    MAIN --> APP
-
-    SM --> RELAIS
-    SM --> CAPTEUR
-
-    APP --> SM
-    APP --> CAPTEUR
-
-    CAPTEUR --> SAVE
-    LOGGER --> SAVE
-
-    SAVE --> MAIL
+    HARDWARE --> CAPTEUR[capteur.py]
+    HARDWARE --> RELAIS[relais.py]
 ```
 
-```mermaid
-  graph TD;
-      A-->B;
-      A-->C;
-      B-->D;
-      C-->D;
-```
 
 - main.py : boucle principale
 - state_machine.py : gestion des états
