@@ -85,46 +85,42 @@ Le projet est codé entièrement en python.
 ```mermaid
 flowchart LR
 
-    MAIN[main.py]
+    classDef folder fill:#FFF9C4,stroke:#BDB76B,stroke-width:2px;
+    classDef file fill:#F5F5F5,stroke:#616161,stroke-width:1px;
+
+    MAIN[main.py<br/><small>Boucle principale</small>]
 
     MAIN --> CONTROL[control/]
     MAIN --> HARDWARE[hardware/]
     MAIN --> IHM[ihm/]
     MAIN --> UTILS[utils/]
 
-    CONTROL --> EVENT[event_manager.py<br/><small>Gestion des �v�nements syst�me</small>]
-    CONTROL --> STATE[state_machine.py]
+    CONTROL --> EVENT[event_manager.py<br/><small>Gestion des évènements système</small>]
+    CONTROL --> STATE[state_machine.py<br/><small>Gestion des états système</small>]
 
-    HARDWARE --> CAPTEUR[capteur.py]
-    HARDWARE --> RELAIS[relais.py]
+    HARDWARE --> CAPTEUR[capteur.py<br/><small>Pilotage du TC-08</small>]
+    HARDWARE --> RELAIS[relais.py<br/><small>Pilotage des relais</small>]
 
-    IHM --> APP[app.py]
+    IHM --> APP[app.py<br/><small>Gestion de l'interface graphique</small>]
 
-    UTILS --> LOGGER[logger.py]
-    UTILS --> SEND[mail_sender.py]
-    UTILS --> SAVE[save.py]
+    UTILS --> LOGGER[logger.py<br/><small>Gestion des logs</small>]
+    UTILS --> SEND[mail_sender.py<br/><small>Envoie des données par mail</small>]
+    UTILS --> SAVE[save.py<br/><small>Enregistre les données PNG et CSV</small>]
+
+    class CONTROL,HARDWARE,IHM,UTILS folder;
+    class MAIN,EVENT,STATE,CAPTEUR,RELAIS,APP,LOGGER,SEND,SAVE file;
 
 ```
-
-
-- main.py : boucle principale
-- state_machine.py : gestion des états
-- hardware/relais.py : pilotage GPIO
-- hardware/capteur.py : lecture TC-08
-- ihm/app.py : interface tkinter
-- utils/logger.py : gestion des logs
-- utils/save.py : enregistrement des données en CSV et PNG
-- utils/mail_sender.py : envoie le CSV et PNG par mail
 
 # Fonctionnement du système
 
 **L'interface homme-machine (IHM) permet de :**
-- visualiser la variation des températures;
-- visualiser la variation du vide;
-- choisir le cycle de chauffe (température, durée, vide);
-- saisie de l'adresse mail recevant les données;
-- activer la pompe à vide;
-- lancer le cycle.
+* visualiser la variation des températures;
+* visualiser la variation du vide;
+* choisir le cycle de chauffe (température, durée, vide);
+* saisie de l'adresse mail recevant les données;
+* activer la pompe à vide;
+* lancer le cycle.
 
 Il existe trois principaux cycles de chauffe :
 | Température cible | Durée de maintien | Pompe      | Température d'arrêt de pompe en descente |
