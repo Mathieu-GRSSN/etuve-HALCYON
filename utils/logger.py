@@ -1,9 +1,10 @@
 import logging
 from logging.handlers import RotatingFileHandler
 import os
+from datetime import datetime
 
 LOG_DIR = "logs"
-LOG_FILE = "etuve-%d-%m-%Y"
+LOG_FILE = datetime.now().strftime("etuve-%d-%m-%Y")
 os.makedirs(LOG_DIR, exist_ok=True)
 
 def setup_logger():

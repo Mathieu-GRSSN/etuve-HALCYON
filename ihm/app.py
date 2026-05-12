@@ -934,11 +934,7 @@ Valider pour fermer la fenêtre."""
 
             if vals:
                 self._temp_lines[i].set_data(times_raw,vals)
-
-        self._ax_t.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M:%S'))
-        self._ax_t.xaxis.set_major_locator(mdates.AutoDateLocator())
-        self._fig.autofmt_xdate()
-
+     
         # Pression
         if snapshot_data["PUMP_ACTIVATION"]:
             self._fig.suptitle("COURBES TEMPERATURES ET PRESSION", fontsize=15, color=FG_DIM)
@@ -953,26 +949,28 @@ Valider pour fermer la fenêtre."""
             valid_press = [v if isinstance(v, float) else None for v in press]
 
             self._press_line.set_data(times_raw, valid_press)
-
-            self._ax_p.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M:%S'))
-            self._ax_p.xaxis.set_major_locator(mdates.AutoDateLocator())
-            self._fig.autofmt_xdate()
-
+         
         else:
             self._fig.suptitle("COURBES TEMPERATURES", fontsize=15, color=FG_DIM)
             # Supprime l'axe pression s'il existe 
             print(f"[ihm] _ax_p {self._ax_p}")
             if self._ax_p is not None:
                 self._ax_p.cla()
-
-        
-
+      
         self._ax_t.relim()
         self._ax_t.autoscale_view()
+
+        self._ax_t.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M:%S'))
+        self._ax_t.xaxis.set_major_locator(mdates.AutoDateLocator())
+        self._fig.autofmt_xdate()
 
         if self._ax_p:
             self._ax_p.relim()
             self._ax_p.autoscale_view()
+
+            self._ax_p.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M:%S'))
+            self._ax_p.xaxis.set_major_locator(mdates.AutoDateLocator())
+            self._fig.autofmt_xdate()
 
     def _set_cycle_lock(self, locked: bool):
         """Grise ou déverrouille les widgets du formulaire cycle."""

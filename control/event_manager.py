@@ -94,7 +94,7 @@ class EventManager:
             elapsed = datetime.now() - data.get("time_start_hold")
             # # print(f'[event_manager] elapsed : {elapsed}')
 
-            if elapsed.total_seconds() >= data.get("TIME_HOLD")*60: # temp_hold en minute, faire x60
+            if elapsed.total_seconds() >= data.get("TIME_HOLD"): # temp_hold en minute, faire x60
                 event = 'time_reached'
             
             else:
