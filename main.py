@@ -72,20 +72,18 @@ def control_loop():
         with lock:
             event, update_em = em.generate_events(data)
             data.update(update_em) # Applique les modif de data
-            if data["state"]=="ERROR_SENSOR":
-                print(f"[main] ERROR_SENSOR event : {event}")
 
         # Appliquer transitions
         updates_sm = sm.transition(event, data)
         with lock :
             data.update(updates_sm) # Applique les modif de data
 
-
         # Attendre un peu avant la prochaine itération
         wait_time = 0.1
         time.sleep(wait_time)  
 
 try :
+    logger.info(f'Ouverture IHM')
     # Lancer le thread de controle en arrière-plan
     t = threading.Thread(target=control_loop, daemon=True)
     t.start()
@@ -94,8 +92,11 @@ try :
     logger.info("Ouverture IHM")
     ihm.run()
     logger.info("Fermeture IHM")
+
 except Exception as e:
     print(e)
     logger.error(f"Erreur dans le main")
+
 finally:
     relais.cleanup()
+    logger.info(f'Fermeture IHM')

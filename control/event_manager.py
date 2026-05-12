@@ -45,6 +45,7 @@ class EventManager:
                 event='stop_heat'
                 return event, update
                 
+        # Si l'état est error sensor -> no_transition si flag toujours activé / end_error si flag desactivé
         if data.get("state") == "ERROR_SENSOR":
             if data.get("error_sensor_flag"):
                 event = "no_transition"
@@ -52,6 +53,7 @@ class EventManager:
                 event = 'end_error'
             return event, update
 
+        # Si état IDLE -> cycle_validated si flag cycle validated activé / no transition sinon
         elif data.get("state") == "IDLE":
 
             if data.get("cycle_validated_flag"):
@@ -68,6 +70,7 @@ class EventManager:
                 event = "no_transition"
             return event, update
          
+         # Si état START -> end_init si fleg end init activé et ventilation - sensor (- pompe) activés / no transition sinon
         elif data.get("state") == "START":
             
             if data.get("ventilation_activated") and data.get("sensor_activated") :
@@ -84,10 +87,9 @@ class EventManager:
                 event="no_transition"
             return event, update
 
+        # Si état HEATING -> temperature reached si temp outil atteint / no transition sinon
         elif data.get("state") == "HEATING":
             temp_min_tool = min(data.get("temp1"), data.get("temp2"))
-
-            # # print(f'[event_manager] temp_min_tool : {temp_min_tool} temp cible : {data.get("TEMP_CIBLE")}')
 
             if temp_min_tool >= data.get("TEMP_CIBLE"):
                 event = 'temperature_reached'
@@ -97,9 +99,9 @@ class EventManager:
 
             return event, update
             
+        # Si état HOLD -> time reached si durée de maitien atteinte / no transition sinon
         elif data.get("state") == "HOLD":
             elapsed = datetime.now() - data.get("time_start_hold")
-            # # print(f'[event_manager] elapsed : {elapsed}')
 
             if elapsed.total_seconds() >= data.get("TIME_HOLD"): # temp_hold en minute, faire x60
                 event = 'time_reached'
@@ -109,6 +111,7 @@ class EventManager:
             
             return event, update
 
+        # Si état COOLING -> temperature low si temp outil inférieur à 30°C / no transition sinon (mettre 42°C)
         elif data.get("state") == "COOLING":
             temp_max_tool = min(data.get("temp1"), data.get("temp2"))
             if temp_max_tool < 30:
@@ -119,6 +122,7 @@ class EventManager:
                 
             return event, update
 
+        # Si état STOP -> cycle_end si relais éteints / no transition sinon
         elif data.get("state") == "STOP":
 
             if not data.get("ventilation_activated") and not data.get("P1_activated") and not data.get("P2_activated") and not data.get("pump_activated"):
