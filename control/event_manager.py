@@ -113,7 +113,7 @@ class EventManager:
 
         # Si état COOLING -> temperature low si temp outil inférieur à 30°C / no transition sinon (mettre 42°C)
         elif data.get("state") == "COOLING":
-            temp_max_tool = min(data.get("temp1"), data.get("temp2"))
+            temp_max_tool = max(data.get("temp1"), data.get("temp2"))
             if temp_max_tool < 30:
                 event = 'temperature_low'
 

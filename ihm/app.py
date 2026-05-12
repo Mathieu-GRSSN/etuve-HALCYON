@@ -726,10 +726,11 @@ Valider pour fermer la fenêtre."""
             self._lbl_temp5["val"].config(text=text_temp[5])
             self._lbl_temp6["val"].config(text=text_temp[6])
             self._lbl_temp7["val"].config(text=text_temp[7])
+
             if snapshot_data["PUMP_ACTIVATION"]:
                 press = snapshot_data.get("press_vide", 0)
-                if press is None:
-                    text_press = "None"
+                if press == "ERROR_SENSOR":
+                    text_press = "ERROR_SENSOR"
                 else:
                     text_press = f"{press:.2f}"
             else:

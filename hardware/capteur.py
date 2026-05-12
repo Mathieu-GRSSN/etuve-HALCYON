@@ -4,7 +4,7 @@ from datetime import datetime
 
 
 class Capteur:
-    def __init__(self, data, logger, lock):
+    def __init__(self, logger, lock):
         
         # Initialise et configure le TC-08 sans dépendances externes.
         self.chandle = ctypes.c_int16()
@@ -12,8 +12,6 @@ class Capteur:
 
         # Lock pour protéger écriture données
         self.lock = lock
-
-        self.mesure_pression = data.get("pump_activation")
 
         # Connection log
         self.logger = logger
@@ -89,7 +87,7 @@ class Capteur:
                 return True, _min_interval
         
 
-    def lire_instantane(self):
+    def lire_instantane(self, is_pressure=False):
         
         if not self.is_open:
             self.logger.error("Aucun TC-08 configuré")
@@ -108,7 +106,7 @@ class Capteur:
             temp_buffer = [None]*9
         
         # Converti la valeur et l'enregistre si la pump est activée
-        if self.mesure_pression :
+        if is_pressure:
             if temp_buffer[8] > 0.5 and temp_buffer[8] < 4.5:
                 press_vide = 1/4* temp_buffer[8] - 9/8
             else:

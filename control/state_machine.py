@@ -28,11 +28,9 @@ class StateMachine:
     # -------
     # TRANSITION : vérifie la condition de transition d'état, renvoie les modifications de data
     # -------
-    def transition(self, event, data):
+    def transition(self, event, data_transition):
+        self.data = data_transition
         update = {}
-
-        with self.lock:
-            self.data = dict(data)
 
         if event == 'force_stop':
 
@@ -132,8 +130,6 @@ class StateMachine:
             previous_state = self.data["state"]
             update = copy.deepcopy(self.data_initial)
             update["previous_state"] = previous_state
-            print(f'[state_machine] on_enter IDLE -> previous_state : {update["previous_state"]}')
-            # print(f'[state_machine] data réinitialisé -> {update}')
             self.ihm.window.after(0, self.ihm._reset_ihm)
             self.capteurs.reset_mesures()
             return update
@@ -206,17 +202,15 @@ class StateMachine:
 
         elif state == "START":
             
-            mesure = self.capteurs.lire_instantane()
+            mesure = self.capteurs.lire_instantane(self.data["PUMP_ACTIVATION"])
             update = mesure
             update["previous_state"] = self.data["state"]
             return update
 
         elif state == "HEATING":
-            mesure = self.capteurs.lire_instantane()
+            mesure = self.capteurs.lire_instantane(self.data["PUMP_ACTIVATION"])
             update = mesure
             update["previous_state"] = self.data["state"]
-
-            print(f'[state_machine] heatin on transition, état P1 : {self.data["P1_activated"]}, P2 : {self.data["P2_activated"]}')
 
             # Si les chauffages sont arrétés (ex: 200°c dépassé) rallume
             if (not self.data["P1_activated"]) and (not self.data["P2_activated"]) :
@@ -224,16 +218,13 @@ class StateMachine:
                 update["P1_activated"] = True
                 update["P2_activated"] = True
 
-                print(f"[state_machine] rallume tout")
-
             return update
 
         elif state == "HOLD":
-            mesure = self.capteurs.lire_instantane()
+            mesure = self.capteurs.lire_instantane(self.data["PUMP_ACTIVATION"])
             update = mesure
 
             temp_min_tool = min(self.data["temp1"], self.data["temp2"])
-            # print(f'[state_machine] temp_min_tool : {temp_min_tool} temp cible : {self.data.get("TEMP_CIBLE")}')
 
             if temp_min_tool < self.data.get("TEMP_CIBLE") - 2 and not self.data["P1_activated"]:
                 self.relais.heating_P1_on()
@@ -247,10 +238,10 @@ class StateMachine:
             return update
 
         elif state == "COOLING":
-            mesure = self.capteurs.lire_instantane()
+            mesure = self.capteurs.lire_instantane(self.data["PUMP_ACTIVATION"])
             update = mesure
 
-            temp_max_tool = min(self.data["temp1"], self.data["temp2"])
+            temp_max_tool = max(self.data["temp1"], self.data["temp2"])
 
             if self.data.get("pump_activated") and temp_max_tool < self.data.get("TEMP_STOP_PUMP"):
                 self.relais.pump_off()
@@ -288,7 +279,7 @@ class StateMachine:
         self.relais.heating_Pmax_off()
         update["P1_activated"] = False
         update["P2_activated"] = False
-        mesure = self.capteurs.lire_instantane()
+        mesure = self.capteurs.lire_instantane(self.data["PUMP_ACTIVATION"])
         update.update(mesure)
         return update
     
