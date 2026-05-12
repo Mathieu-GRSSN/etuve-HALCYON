@@ -3,11 +3,15 @@ from logging.handlers import RotatingFileHandler
 import os
 
 LOG_DIR = "logs"
+LOG_FILE = "etuve-%d-%m-%Y"
 os.makedirs(LOG_DIR, exist_ok=True)
 
 def setup_logger():
-    logger = logging.getLogger("etuve")
+    logger = logging.getLogger(LOG_FILE)
     logger.setLevel(logging.DEBUG)
+
+    if logger.handlers:
+        return logger
 
     formatter = logging.Formatter(
         "%(asctime)s | %(levelname)s | %(message)s",
@@ -15,7 +19,7 @@ def setup_logger():
     )
 
     file_handler = RotatingFileHandler(
-        f"{LOG_DIR}/etuve.log",
+        f"{LOG_DIR}/{LOG_FILE}.log",
         maxBytes=1_000_000,   # 1 MB
         backupCount=5
     )
