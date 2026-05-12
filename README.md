@@ -1,27 +1,35 @@
 # Système de contrôle de l'étuve Halcyon
 
-Le projet vise à automatiser l'étuve Halcyon. Pour cela, le système de contrôle du chauffage ETV22 a été substitué par un nouveau système contrôlable via une application sur mesure. Ce système est contrôlé grâce à une interface-homme machine. L'**objectif** de ce programme, est de créer cette IHM et de contrôler les différents éléments électriques afin de pouvoir optimiser la chauffe des pièces.
+Ce projet s'incrit dans le cadre du projet de fin d'étude (PFE) de Mathieu GROSSIN, étudiant-ingénieur à l'INSA Rennes en Génie Mécanique et Automatique. Il vise à automatiser l'étuve de la société Halcyon qui sert à polymériser des colles et à détendre des pièces formées incrémentalement. 
+
+Le système de contrôle précédent était directement présent dans le chauffage Sovelor ETV22. Pour des questions de meilleur contrôle des différents cycle de chauffe, ce système a été remplacé par un nouveau système sur mesure contrôlable depuis une application externe. L'**objectif** du code, de permettre à l'utilisateur de choisir un cycle de chauffe depuis une interface homme machine et qu'ensuite le système se régule tout seul.
 
 ## Description
 
 L'application permet de piloter l'étuve via une interface graphique locale.
 
 Elle assure :
-- l'affichage en temps réel des capteurs (températures, pression)
-- le contrôle des cycles de chauffe
-- le pilotage des relais via GPIO
-- la gestion de la machine à états
-- l'enregistrement des données
+- le choix du cycle de chauffe
+- l'affichage en temps réel des capteurs (températures, pression), sous forme de valeurs instantanées et de courbes
+- le pilotage des relais reliés au différents composants éléctrique du chauffage (résistance, pompe, ventilation)
+- l'enregistrement et l'envoie des données
 
 L'application fonctionne en local sur la Raspberry Pi.
 
 **Le système est composé des éléments suivants :**
-- Raspberry PI 5 8Go (contrôle le système)
-- Enregistreur de données Pico Technology TC-08 (7 entrées pour température étuve/pièce, 1 entrée pression dans la pièce), branché en usb
-- Carte 8 relay (relay1: ventilation, relay2: résistance 15kW, relay 3: résistance 7.5kW, relay4: pompe à vide, relay5 : servomoteur arrivée d'air), branché et alimenté sur le GPIO
-- Capteur de pression CP-01 (sortie analogique: 0.5-4.5V)
-- Écran (affichage de l'interface homme machine)
-- Clavier/Souris
+* Raspberry PI 5 8Go (contrôle le système);
+* Enregistreur de données Pico Technology TC-08 branché en usb;
+    * 7 entrées pour température étuve/pièce (thermocouple K);
+    * 1 entrée pression dans la pièce (capteur de tension).
+* Capteur de pression CP-01 (sortie analogique: 0.5-4.5V) branché au capteur de tension et alimenté par une alimentation externe en 24V;
+* Carte 8 relay branché sur GPIO et alimenté par une alimentation externe 5V;
+    * relay1: ventilation, 
+    * relay2: résistance 15kW, 
+    * relay 3: résistance 7.5kW, 
+    * relay4: pompe à vide, 
+    * relay5 : servomoteur arrivée d'air. 
+* Écran (affichage de l'interface homme machine)
+* Clavier/Souris
 
 **La répartition des capteurs du TC-08 est la suivante :**
 | Identifiant entrée | Variable | Valeur rélevée | Capteur |
@@ -33,11 +41,7 @@ L'application fonctionne en local sur la Raspberry Pi.
 | 5 | temp5 | Température du mur du fond | Thermocouple Type K |
 | 6 | temp6 | Température du mur de droite | Thermocouple Type K |
 | 7 | temp7 | Température du mur de gauche | Thermocouple Type K |
-| 8 | press_vide | Pression dans la pièce | CP01 & |
-
-**Fréquence d'acquisition**
-- acquisition température : 10 Hz
-- acquisition pression : 10 Hz
+| 8 | press_vide | Pression dans la pièce | CP01 & Capteur de tension|
 
 **Mapping GPIO**
 | borne | GPIO | Fonction | Composant |
@@ -50,12 +54,50 @@ L'application fonctionne en local sur la Raspberry Pi.
 | 16 | GPIO23 | pompe à vide | relay4 |
 | 18 | GPIO24 | servomoteur arrivée d'air | relay5 |
 
+**Fréquence d'acquisition**
+- acquisition TC-08 : 1.1hz (Interval de 900ms)
+
 ## Prérequis logiciel
 - Python
 - picosdk (https://github.com/picotech/picosdk-python-wrappers/tree/master), gestion du TC-08
 - RPi.GPIO, gestion des bornes GPIO
 - pandas, gestion CSV
 - tkinter, gestion interface
+- time
+- threading
+
+ smtplib
+ email 
+ mimetypes
+copy
+  logging
+ logging
+ctypes
+ datetime  
+ matplotlib
+ matplotlib
+ os
+
+ ## Bibliothèques utilisées dans le projet
+
+Le projet est codé entièrement en python.
+
+| Bibliothèque | Description |
+|---|---|
+| `copy` | Permet de copier des objets Python |
+| `ctypes` | Interface entre Python et des bibliothèques C|
+| `datetime` | Gestion des dates et heures |
+| `email` | Construction et gestion des emails|
+| `logging` | Gestion des logs de l'application|
+| `matplotlib` | Création de graphiques et courbes|
+| `mimetypes` | Détection automatique du type de fichier|
+| `pandas` | Manipulation et sauvegarde des données tabulaires |
+| `picosdk` | [SDK de Pico Technology](https://github.com/picotech/picosdk-python-wrappers/tree/master)  |
+| `RPi.GPIO` | contrôle des GPIO du Raspberry Pi 5 |
+| `smtplib` | Envoi d'emails via protocole SMTP |
+| `threading` | Exécution multitche avec des threads pour faire fonctionner plusieurs t�ches en parall�le (IHM, acquisition, s�curit�). |
+| `time` | Gestion du temps (temporisations, d�lais, mesure de dur�e�). |
+| `tkinter` | Cr�ation de l�interface graphique (fen�tres, boutons, graphiques, widgets�). |
 
 ## Architecture logicielle
 
@@ -74,7 +116,7 @@ L'application fonctionne en local sur la Raspberry Pi.
 - visualiser la variation des températures;
 - visualiser la variation du vide;
 - choisir le cycle de chauffe (température, durée, vide);
-- choisir le répértoire de sauvegarde des données capteurs;
+- saisie de l'adresse mail recevant les données;
 - activer la pompe à vide;
 - lancer le cycle.
 

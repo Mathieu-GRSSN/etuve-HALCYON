@@ -1,8 +1,5 @@
 import tkinter as tk
-from tkinter import ttk
-import threading
 import time
-from distro import name
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.dates as mdates
