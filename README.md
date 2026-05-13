@@ -27,7 +27,7 @@ L'application fonctionne en local sur la Raspberry Pi.
     * relay2: résistance 15kW, 
     * relay 3: résistance 7.5kW, 
     * relay4: pompe à vide, 
-    * relay5 : servomoteur arrivée d'air. 
+    * relay5 : servomoteur arrivée d'air. (étant donné que nous n'avons pas de retour fournisseur, le code ne le prend pas encore en compte)
 * Écran (affichage de l'interface homme machine)
 * Clavier/Souris
 
@@ -80,10 +80,8 @@ Le projet est codé entièrement en python.
 
 ## Architecture logicielle
 
-## Architecture logicielle
-
 ```mermaid
-flowchart LR
+flowchart TD
 
     classDef folder fill:#FFF9C4,stroke:#BDB76B,stroke-width:2px;
     classDef file fill:#F5F5F5,stroke:#616161,stroke-width:1px;
@@ -115,11 +113,12 @@ flowchart LR
 # Fonctionnement du système
 
 **L'interface homme-machine (IHM) permet de :**
-* visualiser la variation des températures;
-* visualiser la variation du vide;
-* choisir le cycle de chauffe (température, durée, vide);
-* saisie de l'adresse mail recevant les données;
-* activer la pompe à vide;
+* visualiser l'état du système ; 
+* affficher les données mesurées instantanées ;
+* affficher les données sous forme de courbes ;
+* choisir le cycle de chauffe (température, durée, pompe) ;
+* saisie de l'adresse mail recevant les données ;
+* visualiser l'activation des relais/composants ;
 * lancer le cycle.
 
 Il existe trois principaux cycles de chauffe :
@@ -129,7 +128,7 @@ Il existe trois principaux cycles de chauffe :
 | 120°              | 1h30              | activée    | 70°                                      |
 | 180°              | 7h                | désactivée | -                                        |
 
-Des cycles de chauffe personnalisés peuvent être choisis. Pour cela, il faut rentrer la température cible, la durée de maintien en température et si la pompe doit être mise en route.\
+Des cycles de chauffe personnalisés peuvent être choisis. Pour cela, il faut rentrer la température cible, la durée de maintien en température et si la pompe doit être mise en route et sa température d'arrêt.\
 \
 ⚠️ La température cible correspond à la température la plus basse mesurée dans la pièce (minimum(temp1,temp2))\
 ⚠️ La température d'arrêt de pompe en descente correspond à la température la plus haute mesurée dans la pièce (maximum(temp1,temp2))\
@@ -149,7 +148,7 @@ Des cycles de chauffe personnalisés peuvent être choisis. Pour cela, il faut r
 ## Sécurité
 - Tous les relais OFF au démarrage
 - Si température > 200°C arrêt immédiat résistances (relay2 et relay3 OFF)
-- Si erreur -> arrêt immédiat résistances
+- Si erreur -> arrêt immédiat des tous les relais
 
 # Machine à état
 IDLE         → système arrêté\
@@ -164,19 +163,58 @@ ERROR_SENSOR → sécurité fonctionnement capteurs\
 
 | état actuel     | Transition                              | état suivant   |
 | --------------- | --------------------------------------- | -------------- |
-| IDLE            | Lancement cycle                         | START          |
-| START           | init terminée                           | HEATING        |
-| HEATING         | min(temp1,temp2) >= TEMP_CIBLE          | HOLD           |
-| HOLD            | time_hold >= TIME_HOLD                  | COOLING        |
-| COOLING         | max(temp1, temp2) < 40°C                | STOP           |
-| STOP            | enregistrements terminés                | IDLE           |
-| HEATIG or HOLD  | max(temp) > 250°C                       | ERROR_TEMP     |
-| HEATIG or HOLD or COOLING | press_vide > -0.5bar          | WARNING_PUMP   |
-| START           | capteurs non fonctionnels               | ERROR_SENSOR   |
-| START or HEATING or HOLD or COOLING | Arrêt utilisateur   | STOP           |
-| ERROR_TEMP      | Erreur validée                          | STOP           |
-| WARNING_PUMP    | Erreur validée & press_vide < -0.5 bar  | état précédent |
-| ERROR_SENSOR    | Erreur validée                          | Arret cycle    |
+| `IDLE`            | Lancement cycle                         | START          |
+| `START`           | init terminée                           | HEATING        |
+| `HEATING`         | min(temp1,temp2) >= TEMP_CIBLE          | HOLD           |
+| `HOLD`            | time_hold >= TIME_HOLD                  | COOLING        |
+| `COOLING`         | max(temp1, temp2) < 40°C                | STOP           |
+| `STOP`            | enregistrements terminés                | IDLE           |
+| `HEATING` or `HOLD`  | max(temp) > 250°C                       | ERROR_TEMP     |
+| `HEATING` `HOLD` or `COOLING` | press_vide > -0.5bar          | WARNING_PUMP   |
+| `START` `HEATING` `HOLD` or `COOLING`           | capteurs non fonctionnels               | ERROR_SENSOR   |
+| `START` or `HEATING` or `HOLD` or `COOLING` | Arrêt utilisateur   | STOP           |
+| `ERROR_TEMP`      | Erreur validée                          | STOP           |
+| `WARNING_PUMP`    | Erreur validée & press_vide < -0.5 bar  | état précédent |
+| `ERROR_SENSOR`    | Erreur validée                          | STOP    |
+
+```mermaid
+flowchart TD
+
+    classDef folder fill:#FFF9C4,stroke:#BDB76B,stroke-width:2px;
+    classDef file fill:#F5F5F5,stroke:#616161,stroke-width:1px;
+
+    ILDE
+    START
+    HEATING
+    HOLD
+    COOLING
+    STOP
+    ERROR_TEMP
+    WARNING_PUMP
+    ERROR_SENSOR
+
+    IDLE --> START
+    START --> HEATING
+    HEATING --> HOLD
+    HOLD --> COOLING
+    COOLING --> STOP
+    STOP --> IDLE
+
+    START --> ERROR_SENSOR
+    HEATING --> ERROR_SENSOR
+    HOLD --> ERROR_SENSOR
+    COOLING --> ERROR_SENSOR
+
+    HEATING --> ERROR_TEMP
+    HOLD --> ERROR_TEMP
+
+    START --> STOP
+    HEATING --> STOP
+    HOLD --> STOP
+    COOLING --> STOP
+    ERROR_SENSOR --> STOP
+    ERROR_TEMP --> STOP
+```
 
 ## Etat intial (démarrage ou redémarrage)
 - tous les relais OFF
