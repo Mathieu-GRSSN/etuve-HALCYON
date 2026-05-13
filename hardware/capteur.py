@@ -103,18 +103,20 @@ class Capteur:
 
         if get_single == 0:
             self.logger.warning("Erreur de lecture du TC-08")
-            temp_buffer = [None]*9
-        
-        # Converti la valeur et l'enregistre si la pump est activée
-        if is_pressure:
-            if temp_buffer[8] > 0.5 and temp_buffer[8] < 4.5:
-                press_vide = 1/4* temp_buffer[8] - 9/8
-            else:
-                press_vide = 'ERROR_SENSOR'
-
-            press_vide = press_vide_simu()
-        else:
+            temp_buffer = [None]*8
             press_vide = None
+        
+        else:
+            # Converti la valeur et l'enregistre si la pump est activée
+            if is_pressure:
+                if temp_buffer[8] > 0.5 and temp_buffer[8] < 4.5:
+                    press_vide = 1/4* temp_buffer[8] - 9/8
+                else:
+                    press_vide = 'ERROR_SENSOR'
+
+                press_vide = press_vide_simu()
+            else:
+                press_vide = None
 
         # Organisation des données dans un dictionnaire
         mesures = {
@@ -128,13 +130,13 @@ class Capteur:
             "temp7": temp_buffer[7],
             "press_vide": press_vide
         }
-      
+        
         # enregistrement des données dans le dictionnaire (protégéees avec lock)
         with self.lock:
             for id, value in mesures.items():
                 self.all_mesures[id].append(mesures[id])
-        
-        # Renvoie toutes les mesures pour mise à jour affichage
+            
+            # Renvoie toutes les mesures pour mise à jour affichage
         with self.lock:
             mesures["_all_mesures"] = {k: list(v) for k, v in self.all_mesures.items()}
 
@@ -173,6 +175,6 @@ def press_vide_simu():
     if random_fail == 10:
         press_vide = -0.3
     else:
-        press_vide = random.randint(-9,-6)/10
+        press_vide = -0.9 + random.random()*0.05
 
     return press_vide

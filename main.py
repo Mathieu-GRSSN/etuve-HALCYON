@@ -57,7 +57,7 @@ data = {
     "force_stop_flag": False,
     "cycle_finished_flag": False,
     "error_sensor_flag": False,
-    'warning_pump_flag':False,
+    "warning_pump_flag":False,
 }
 
 # Initialisation de composants
@@ -79,12 +79,16 @@ def control_loop():
             event, update_em = em.generate_events(snapshot_data)
             data.update(update_em) # Applique les modif de data
 
+        print(f"[Main - EM] Event généré : {event} - State actuel : {data.get('state')}") # DEBUG
+
         # Appliquer transitions
         with lock :
             snapshot_data = data.copy()  # Créer une copie de data pour éviter les problèmes de concurrence
             updates_sm = sm.transition(event, snapshot_data)
             data.update(updates_sm) # Applique les modif de data
 
+        print(f"[Main - SM] Event généré : {event} - State actuel : {data.get('state')}") # DEBUG
+        
         # Attendre un peu avant la prochaine itération
         if data.get("min_interval_sensor") is not None:
             if data.get("min_interval_sensor")>0:

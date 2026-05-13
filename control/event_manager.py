@@ -68,7 +68,7 @@ class EventManager:
                 if data.get("press_vide") > -0.5 :
 
                     update['warning_pump_flag'] = True
-                    self.logger.warning(f"Perte de vide -> pression = {round(data.get('press_vide'))} bar")
+                    self.logger.warning(f"Perte de vide -> pression = {round(data.get('press_vide'), 2)} bar")
                     if data.get("state") == "HEATING":
                         event = 'temperature_reached'
                     else:

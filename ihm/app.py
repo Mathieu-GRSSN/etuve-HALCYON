@@ -78,7 +78,7 @@ Veuillez vérifier les branchements du TC-08, des thermocouples et du capteur de
 Valider pour fermer la fenêtre."""
 
 WARNING_TEXT = f"""
-A {time.strftime("%H:%M:%S")}, la pression était supérieur à -0.5 bar.
+Pression mesurée supérieur à -0.5 bar.
 
 Veuillez vérifier les branchements.
 
@@ -98,30 +98,35 @@ def make_card(parent, title=None, **kwargs):
         lbl.pack(anchor="w", padx=10, pady=(8, 2))
     return frame
 
-def make_popup(parent, _title, fonc, text):
+def make_popup(parent, _title, fonc, text, data):
 
 
             popup = tk.Toplevel(parent, bg=BG)
             popup.title(_title)
-            popup.geometry("600x400")
+            popup.geometry("600x450")
             popup.transient(parent)
             popup.grab_set()
             popup.focus_set()
-            popup.protocol("WM_DELETE_WINDOW", lambda: fonc(popup, _title))
+            popup.protocol("WM_DELETE_WINDOW", lambda: fonc(popup, data))
 
             inner = tk.Frame(popup, bg=BG2)
             inner.pack(fill="both", expand=True, padx=1, pady=1)
 
-            # Texte de confirmation
+            # Texte de erreur
             text_label = tk.Frame(inner, bg=BG2)
             text_label.pack(fill="both", expand=True, padx=10, pady=10)
 
             text_label.columnconfigure(0, weight=1) 
-            text_label.rowconfigure(0, weight=1)    
+            text_label.rowconfigure(0, weight=1)   
+            text_label.rowconfigure(1, weight=1) 
+
+            tk.Label(text_label, text=f"Heure de l'erreur : {datetime.now().strftime('%H:%M:%S')}",
+                    bg=BG2, fg=ERROR, font=FONT_MED2,
+                    wraplength=550, justify="center", anchor="center").grid(row = 0, column = 0) 
 
             tk.Label(text_label, text=text,
                     bg=BG2, fg=ERROR, font=FONT_MED2,
-                    wraplength=550, justify="center", anchor="center").grid(row = 0, column = 0)
+                    wraplength=550, justify="center", anchor="center").grid(row = 1, column = 0)
 
             # Boutons
             btn_frame = tk.Frame(inner, bg=BG2)
@@ -134,7 +139,7 @@ def make_popup(parent, _title, fonc, text):
             btn_yes = tk.Button(btn_frame, text="Valider", 
                                 width = 10, font=FONT_BIG, bd=0, padx=8, pady=10, cursor="hand2", 
                                 bg=GREEN, fg = 'white',
-                                command=lambda:fonc(popup, _title))
+                                command=lambda:fonc(popup, data))
             btn_yes.grid(row = 0, column = 0, padx=(6, 6), pady=4)
 
 # ─────────────────────────────────────────────
@@ -677,12 +682,12 @@ class HalcyonIHM:
         elif snapshot_data.get("error_sensor_flag"):
             self._popup_error_exist = True
 
-            make_popup(self.window,"Erreur capteur", self._on_validate_popup, ERROR_TEXT)
+            make_popup(self.window,"Erreur capteur", self._on_validate_popup, ERROR_TEXT, snapshot_data)
         
         elif snapshot_data.get("warning_pump_flag"):
             self._popup_error_exist = True
 
-            make_popup(self.window,"warning pression", self._on_validate_popup, WARNING_TEXT)
+            make_popup(self.window,"warning pression", self._on_validate_popup, WARNING_TEXT, snapshot_data)
             
         else :
             self._popup_error_exist = False
@@ -896,15 +901,16 @@ class HalcyonIHM:
 
         popup.destroy()
 
-    def _on_validate_popup(self, popup, title):
+    def _on_validate_popup(self, popup, snapshot):
         """
         Valide le cycle :
           - Lit et vérifie les saisies
           - Met à jour data
           - Verrouille le formulaire
         """
+
         with self.lock:
-            if title == 'Erreur capteur':
+            if snapshot.get("error_sensor_flag"):
                 # Mise à jour du dictionnaire partagé
                 self.data["sensor_activated"]       = False
                 self.data["min_interval_sensor"]    = None
@@ -912,14 +918,14 @@ class HalcyonIHM:
                 # signal pour l'event_manager
                 self.data["error_sensor_flag"] = False
 
-            if title == 'Warning pression':
+            if snapshot.get("warning_pump_flag"):
                 # signal pour l'event_manager
                 self.data["warning_pump_flag"] = False
 
         popup.destroy()
         self._popup_error_exist = False
 
-        if title == 'Erreur capteur':
+        if snapshot.get("error_sensor_flag"):
             self._quit()
  
     def _not_validated(self, popup):
