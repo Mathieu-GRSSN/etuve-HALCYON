@@ -18,12 +18,14 @@ class StateMachine:
             "COOLING": self.cooling_state,
             "STOP": self.stop_state,
             "ERROR_SENSOR": self.end_error,
-            "ERROR_TEMP": self.end_error
+            "ERROR_TEMP": self.end_error,
+            "WARNING_PUMP": self.end_warning,
         }
-        self.list_transition = ['cycle_validated','end_init', 'temperature_reached', 'time_reached','temperature_low', 'cycle_end', 'end_error']
+        self.list_transition = ['cycle_validated','end_init', 'temperature_reached', 'time_reached','temperature_low', 'cycle_end', 'end_error', 'end_warning']
         self.list_transition_error = []
         self.logger = logger
         self.lock = lock
+        self.previous_state_warning = None
         
     # -------
     # TRANSITION : vérifie la condition de transition d'état, renvoie les modifications de data
@@ -48,10 +50,17 @@ class StateMachine:
         if event == 'error_sensor':
 
             self.logger.error("ERROR SENSOR")
+            update = self.on_enter("ERROR_SENSOR")
             update["state"] = "ERROR_SENSOR"
-            self.on_enter("ERROR_SENSOR")
             return update
-            
+        
+        if event == 'warning_pump':
+            self.previous_state_warning = self.data["state"]
+            self.logger.warning(f'Pression supérieure à -0.5 bar')
+            self.on_enter("WARNING_PUMP")
+            update["state"] = "WARNING_PUMP"
+            return update
+
         if event in self.list_transition:
             new_state = self.states_fonc[self.data["state"]](event)
 
@@ -107,6 +116,11 @@ class StateMachine:
         if event == "end_error":
             return "STOP"
         return self.data["state"]
+    
+    def end_warning(self, event):
+        if event == "end_warning":
+            return self.previous_state_warning
+        return self.data["state"]
 
     # -------
     # ON ENTER : execute les actions en entrée d'état, renvoie les modifications de data
@@ -124,6 +138,13 @@ class StateMachine:
                 update["P1_activated"] = False
                 update["P2_activated"] = False
                 update["pump_activated"] = False
+            return update
+        
+        if state == "WARNING_PUMP":
+            if self.data["P1_activated"] or self.data["P2_activated"]:
+                self.relais.heating_Pmax_off()
+                update["P1_activated"] = False
+                update["P2_activated"] = False
             return update
 
         if state == "IDLE":

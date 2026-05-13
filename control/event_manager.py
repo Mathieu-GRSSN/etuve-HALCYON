@@ -70,7 +70,13 @@ class EventManager:
                     update['warning_pump_flag'] = True
                     return event, update
 
-
+        # Si l'état est warning pump -> no_transition si flag toujours activé / end_warning si flag desactivé
+        if data.get("state") == "WARNING_PUMP":
+            if data.get("warning_pump_flag"):
+                event = "no_transition"
+            else:
+                event = 'end_warning'
+            return event, update
 
         # Si état IDLE -> cycle_validated si flag cycle validated activé / no transition sinon
         elif data.get("state") == "IDLE":

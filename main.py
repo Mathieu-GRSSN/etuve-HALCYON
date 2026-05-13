@@ -87,7 +87,8 @@ def control_loop():
 
         # Attendre un peu avant la prochaine itération
         if data.get("min_interval_sensor") is not None:
-            wait_time = data.get("min_interval_sensor") / 1000  # Convertir ms en secondes
+            if data.get("min_interval_sensor")>0:
+                wait_time = data.get("min_interval_sensor") / 1000  # Convertir ms en secondes
         else:
             wait_time = 0.1
         time.sleep(wait_time)  
