@@ -649,7 +649,7 @@ class HalcyonIHM:
             text = """
 Une erreur a été détectée avec le TC-08.
 
-Veuillez vérifier les branchements et relancer le cycle.
+Veuillez vérifier les branchements du TC-08, des thermocouples et du capteur de pression et relancer le cycle.
 
 Valider pour fermer la fenêtre."""
 
@@ -735,7 +735,7 @@ Valider pour fermer la fenêtre."""
             if snapshot_data["PUMP_ACTIVATION"]:
                 press = snapshot_data.get("press_vide", 0)
                 if press == "ERROR_SENSOR":
-                    text_press = "ERROR_SENSOR"
+                    text_press = "ERREUR"
                 else:
                     text_press = f"{press:.2f}"
             else:

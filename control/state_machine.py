@@ -34,7 +34,7 @@ class StateMachine:
 
         if event == 'force_stop':
 
-            self.logger.warning(f'Arret forcé')
+            self.logger.warning(f'Arrêt forcé')
             update["state"] = "STOP"
             self.on_enter("STOP")
             return update

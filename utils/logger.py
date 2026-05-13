@@ -1,14 +1,32 @@
 import logging
-from logging.handlers import RotatingFileHandler
+from logging.handlers import TimedRotatingFileHandler
 import os
 from datetime import datetime
 
 LOG_DIR = "logs"
-LOG_FILE = datetime.now().strftime("etuve-%d-%m-%Y")
 os.makedirs(LOG_DIR, exist_ok=True)
 
+
+class DailyDateFileHandler(TimedRotatingFileHandler):
+    def __init__(self, log_dir, **kwargs):
+        self.log_dir = log_dir
+        filename = self._get_dated_filename()
+        super().__init__(filename, **kwargs)
+
+    def _get_dated_filename(self):
+        date_str = datetime.now().strftime("%d-%m-%Y")
+        return os.path.join(self.log_dir, f"etuve-{date_str}.log")
+
+    def doRollover(self):
+        """� minuit, ferme l'ancien fichier et ouvre celui du nouveau jour."""
+        self.stream.close()
+        self.baseFilename = os.path.abspath(self._get_dated_filename())
+        self.stream = self._open()
+        self.rolloverAt = self.computeRollover(datetime.now().timestamp())
+
+
 def setup_logger():
-    logger = logging.getLogger(LOG_FILE)
+    logger = logging.getLogger("etuve")
     logger.setLevel(logging.DEBUG)
 
     if logger.handlers:
@@ -19,10 +37,12 @@ def setup_logger():
         datefmt="%Y-%m-%d %H:%M:%S"
     )
 
-    file_handler = RotatingFileHandler(
-        f"{LOG_DIR}/{LOG_FILE}.log",
-        maxBytes=1_000_000,   # 1 MB
-        backupCount=5
+    file_handler = DailyDateFileHandler(
+        log_dir=LOG_DIR,
+        when="midnight",
+        interval=1,
+        backupCount=30,
+        encoding="utf-8"
     )
     file_handler.setFormatter(formatter)
 

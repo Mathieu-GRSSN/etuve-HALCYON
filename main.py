@@ -36,7 +36,7 @@ data = {
     "temp5": 0,
     "temp6": 0,
     "temp7": 0,
-    "press_vide": 0,
+    "press_vide": None,
     "_all_mesures": {},
     "TEMP_CIBLE": 40,
     "TIME_HOLD": 10,
@@ -57,6 +57,7 @@ data = {
     "force_stop_flag": False,
     "cycle_finished_flag": False,
     "error_sensor_flag": False,
+    'warning_pump_flag':False,
 }
 
 # Initialisation de composants

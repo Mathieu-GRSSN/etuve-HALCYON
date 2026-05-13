@@ -52,6 +52,25 @@ class EventManager:
             else:
                 event = 'end_error'
             return event, update
+        
+        # Si la pompe est activée, vérifie que la capteur n'est pas en erreur et vérifie que le pression n'est pas trop faible
+        STATE_WARNING_PUMP = ["HEATING","HOLD","COOLING"]
+        if data.get("pump_activated") and data.get("state") in STATE_WARNING_PUMP:
+
+            print(f"[EM] press_vide : {data.get('press_vide')}")
+            if data.get('press_vide') is not None:
+
+                if data.get("press_vide") == "ERROR_SENSOR":
+                    update['error_sensor_flag'] = True
+                    event='error_sensor'
+                    return event, update
+                
+                if data.get("press_vide") > -0.5 :
+                    event = 'warning_pump'
+                    update['warning_pump_flag'] = True
+                    return event, update
+
+
 
         # Si état IDLE -> cycle_validated si flag cycle validated activé / no transition sinon
         elif data.get("state") == "IDLE":
@@ -70,7 +89,7 @@ class EventManager:
                 event = "no_transition"
             return event, update
          
-         # Si état START -> end_init si fleg end init activé et ventilation - sensor (- pompe) activés / no transition sinon
+         # Si état START -> end_init si flag end init activé et ventilation - sensor (- pompe) activés / no transition sinon
         elif data.get("state") == "START":
             
             if data.get("ventilation_activated") and data.get("sensor_activated") :
