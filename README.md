@@ -81,7 +81,7 @@ Le projet est codé entièrement en python.
 ## Architecture logicielle
 
 ```mermaid
-flowchart TD
+flowchart LR
 
     classDef folder fill:#FFF9C4,stroke:#BDB76B,stroke-width:2px;
     classDef file fill:#F5F5F5,stroke:#616161,stroke-width:1px;
@@ -157,8 +157,7 @@ HEATING      → montée en température\
 HOLD         → maintien température\
 COOLING      → refroidissement\
 STOP         → fin normale\
-ERROR_TEMP   → sécurité température maximale\
-ERROR_PUMP   → sécurité état du vide\
+WARNING_PUMP   → sécurité état du vide\
 ERROR_SENSOR → sécurité fonctionnement capteurs\
 
 | état actuel     | Transition                              | état suivant   |
@@ -178,49 +177,47 @@ ERROR_SENSOR → sécurité fonctionnement capteurs\
 ```mermaid
 flowchart TB
 
-    IDLE([IDLE])
-    START([START])
-    HEATING([HEATING])
-    HOLD([HOLD])
-    COOLING([COOLING])
-    STOP([STOP])
-
-    ERROR_SENSOR([ERROR_SENSOR])
-    ERROR_TEMP([ERROR_TEMP])
-
-    WARNING_PUMP([WARNING_PUMP])
-
-    ETATX([N'importe quel état])
-
     subgraph Cycle
-    direction LR
+        direction LR
+        IDLE([IDLE])
+        START([START])
+        HEATING([HEATING])
+        HOLD([HOLD])
+        COOLING([COOLING])
+        STOP([STOP])
+
         IDLE --> START
         START --> HEATING
         HEATING --> HOLD
         HOLD --> COOLING
         COOLING --> STOP
         STOP --> IDLE
+
+        START --> STOP
+        HEATING --> STOP
+        HOLD --> STOP
+
     end
 
-    START --> STOP
-    HEATING --> STOP
-    HOLD --> STOP
-    COOLING --> STOP
+
 
     subgraph Erreurs
-    linkStyle default interpolate stepBefore
-    direction LR
+        direction LR
+        ERROR_SENSOR([ERROR_SENSOR])
+
         START --> ERROR_SENSOR
         HEATING --> ERROR_SENSOR
         HOLD --> ERROR_SENSOR
         COOLING --> ERROR_SENSOR
 
         ERROR_SENSOR --> STOP
-        ERROR_TEMP --> STOP
     end
 
     subgraph Warnings
-    direction LR
+        direction LR
+        WARNING_PUMP([WARNING_PUMP])
+        ETATX([N'importe quel état])
+
         WARNING_PUMP --> ETATX
         ETATX --> WARNING_PUMP
     end
