@@ -169,57 +169,54 @@ ERROR_SENSOR → sécurité fonctionnement capteurs\
 | `HOLD`            | time_hold >= TIME_HOLD                  | COOLING        |
 | `COOLING`         | max(temp1, temp2) < 40°C                | STOP           |
 | `STOP`            | enregistrements terminés                | IDLE           |
-| `HEATING` or `HOLD`  | max(temp) > 250°C                       | ERROR_TEMP     |
 | `HEATING` `HOLD` or `COOLING` | press_vide > -0.5bar          | WARNING_PUMP   |
 | `START` `HEATING` `HOLD` or `COOLING`           | capteurs non fonctionnels               | ERROR_SENSOR   |
 | `START` or `HEATING` or `HOLD` or `COOLING` | Arrêt utilisateur   | STOP           |
-| `ERROR_TEMP`      | Erreur validée                          | STOP           |
 | `WARNING_PUMP`    | Erreur validée & press_vide < -0.5 bar  | état précédent |
 | `ERROR_SENSOR`    | Erreur validée                          | STOP    |
 
 ```mermaid
-flowchart LR
+flowchart TB
 
-    classDef folder fill:#FFF9C4,stroke:#BDB76B,stroke-width:2px;
-    classDef file fill:#F5F5F5,stroke:#616161,stroke-width:1px;
-
-    ILDE@{ shape: rounded}
+    IDLE@{ shape: rounded}
     START@{ shape: rounded}
     HEATING@{ shape: rounded}
     HOLD@{ shape: rounded}
     COOLING@{ shape: rounded}
     STOP@{ shape: rounded}
-    ERROR_TEMP@{ shape: rounded}
     ERROR_SENSOR@{ shape: rounded}
+    WARNING_PUMP@{ shape: rounded}
+    ETATX@{ shape: rounded, label : N'importe quel état}
 
     subgraph Cycle
+    direction LR
         IDLE --> START
         START --> HEATING
         HEATING --> HOLD
         HOLD --> COOLING
         COOLING --> STOP
         STOP --> IDLE
-
-        START --> STOP
-        HEATING --> STOP
-        HOLD --> STOP
-        COOLING --> STOP
     end
 
+    START --> STOP
+    HEATING --> STOP
+    HOLD --> STOP
+    COOLING --> STOP
+
     subgraph Erreurs
+    direction LR
         START --> ERROR_SENSOR
         HEATING --> ERROR_SENSOR
         HOLD --> ERROR_SENSOR
         COOLING --> ERROR_SENSOR
 
-        HEATING --> ERROR_TEMP
-        HOLD --> ERROR_TEMP
-
         ERROR_SENSOR --> STOP
         ERROR_TEMP --> STOP
-    
     end
 
+    subgraph Warningd
+    WARNING_PUMP --> ETATX
+    ETATX --> WARNING_PUMP
 
 
 ```
@@ -241,7 +238,7 @@ flowchart LR
 - Choix durée maintien → TIME_HOLD  (int)
 - Choix état pompe → PUMP_ACTIVATION (boolean)
 - Choix température arrêt pompe → TEMP_STOP_PUMP (int)
-- Choix de l'adresse mail de reception
+- Choix de l'adresse mail de reception → RECEIVER_MAIL (str)
 
 **Condition de sortie** :
 - Utilisateur appuie sur le bouton "Valider cycle"
@@ -253,10 +250,10 @@ flowchart LR
 
 **Actions en entrée d'état**:
 - Mise en route ventilation (relay1 ON)
-- Fermeture arrivée d'air (relay5 OFF)
+- ~~Fermeture arrivée d'air~~ (relay5 OFF) (pas pour le moment)
 - Ouverture TC-08
 - Initialisation capteur → temp1, temp2, temp3, temp4, temp5, temp6, temp7, press_vide
-- Affichage des mesures
+- Affichage des mesures / courbe
 - Si PUMP_ACTIVATION = True, mise en route pompe (relay4 ON)
 
 **Actions pendant l'état** :
@@ -296,7 +293,6 @@ flowchart LR
 - mesure des capteurs
 - limite la température maximale (200°c)
 
-
 **Condition de sortie** :
 - durée de maintien atteinte (time_now >= time_start_hold + TIME_HOLD) : time_reached
 
@@ -306,7 +302,7 @@ flowchart LR
 
 **Actions en entrée d'état** :
 - arrêt résistances (relay2 & relay3 OFF)
-- ouvrir arrivée air (relay5 ON)
+- ~~ouvrir arrivée air~~ (relay5 ON) (pas pour le moment)
 
 **Actions pendant l'état** :
 - gérer pompe, si max(temp1, temp2) < TEMP_STOP_PUMP, arrêt (relay4 OFF)
@@ -324,8 +320,8 @@ flowchart LR
 - arrêt de la ventilation (relay1 OFF)
 - ferme le TC-08
 - Sauvegarde des données capteur en CSV, format : Time, temp1, temp2, temp3, temp4, temp5, temp6, temp7, press_vide
-- Sauvegarde du fichier log
-- envoie les fichier data.csv et log par mail
+- Sauvegarde des données capteur en PNG
+- envoie les fichier CSV et PNG par mail
 
 **Actions pendant l'état** :
 - arrêt tous les relais (relay1, relay2, relay3, relay4 OFF)
@@ -334,16 +330,6 @@ flowchart LR
 - Tous les relais arrêtés
 - Enregistrement terminés : cycle_end
 
-## ERROR_TEMP
-**Objectif** :
-- Sécurité maximale
-
-**Actions en entrée d'état** :
-- arrêt des résistances (relay2 & relay3 OFF)
-
-**Condition de sortie** :
-- Envoie d'un message d'alerte par email
-- Validation fin erreur par l'utilisateur : error_end
 
 ## WARNING_PUMP
 **Objectif** :
