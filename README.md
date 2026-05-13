@@ -178,15 +178,19 @@ ERROR_SENSOR → sécurité fonctionnement capteurs\
 ```mermaid
 flowchart TB
 
-    IDLE@{ shape: rounded}
-    START@{ shape: rounded}
-    HEATING@{ shape: rounded}
-    HOLD@{ shape: rounded}
-    COOLING@{ shape: rounded}
-    STOP@{ shape: rounded}
-    ERROR_SENSOR@{ shape: rounded}
-    WARNING_PUMP@{ shape: rounded}
-    ETATX@{ shape: rounded, label : N'importe quel état}
+    IDLE([IDLE])
+    START([START])
+    HEATING([HEATING])
+    HOLD([HOLD])
+    COOLING([COOLING])
+    STOP([STOP])
+
+    ERROR_SENSOR([ERROR_SENSOR])
+    ERROR_TEMP([ERROR_TEMP])
+
+    WARNING_PUMP([WARNING_PUMP])
+
+    ETATX([N'importe quel état])
 
     subgraph Cycle
     direction LR
@@ -204,6 +208,7 @@ flowchart TB
     COOLING --> STOP
 
     subgraph Erreurs
+    linkStyle default interpolate stepBefore
     direction LR
         START --> ERROR_SENSOR
         HEATING --> ERROR_SENSOR
@@ -214,11 +219,11 @@ flowchart TB
         ERROR_TEMP --> STOP
     end
 
-    subgraph Warningd
-    WARNING_PUMP --> ETATX
-    ETATX --> WARNING_PUMP
-
-
+    subgraph Warnings
+    direction LR
+        WARNING_PUMP --> ETATX
+        ETATX --> WARNING_PUMP
+    end
 ```
 
 ## Etat intial (démarrage ou redémarrage)
