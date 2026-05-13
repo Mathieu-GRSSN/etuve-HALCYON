@@ -54,12 +54,7 @@ class StateMachine:
             update["state"] = "ERROR_SENSOR"
             return update
         
-        if event == 'warning_pump':
-            self.previous_state_warning = self.data["state"]
-            self.logger.warning(f'Pression supérieure à -0.5 bar')
-            self.on_enter("WARNING_PUMP")
-            update["state"] = "WARNING_PUMP"
-            return update
+
 
         if event in self.list_transition:
             new_state = self.states_fonc[self.data["state"]](event)
@@ -145,6 +140,8 @@ class StateMachine:
                 self.relais.heating_Pmax_off()
                 update["P1_activated"] = False
                 update["P2_activated"] = False
+            mesure = self.capteurs.lire_instantane(self.data["PUMP_ACTIVATION"])
+            update.update(mesure)
             return update
 
         if state == "IDLE":

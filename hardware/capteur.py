@@ -111,6 +111,8 @@ class Capteur:
                 press_vide = 1/4* temp_buffer[8] - 9/8
             else:
                 press_vide = 'ERROR_SENSOR'
+
+            press_vide = press_vide_simu()
         else:
             press_vide = None
 
@@ -159,3 +161,18 @@ class Capteur:
     def get_all_mesures(self):
         with self.lock:
             return {k: list(v) for k, v in self.all_mesures.items()}
+        
+
+# ─────────────────────────────────────────────    
+# SIMULATION PRESSION
+# ─────────────────────────────────────────────
+def press_vide_simu():
+    import random
+
+    random_fail = random.randint(1,10)
+    if random_fail == 10:
+        press_vide = -0.3
+    else:
+        press_vide = random.randint(-9,-6)/10
+
+    return press_vide

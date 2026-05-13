@@ -57,7 +57,6 @@ class EventManager:
         STATE_WARNING_PUMP = ["HEATING","HOLD","COOLING"]
         if data.get("pump_activated") and data.get("state") in STATE_WARNING_PUMP:
 
-            print(f"[EM] press_vide : {data.get('press_vide')}")
             if data.get('press_vide') is not None:
 
                 if data.get("press_vide") == "ERROR_SENSOR":
@@ -65,21 +64,19 @@ class EventManager:
                     event='error_sensor'
                     return event, update
                 
+                # Si perte de vide -> temperature_reached si état HEATING, no transition si HOLD ou COOLING
                 if data.get("press_vide") > -0.5 :
-                    event = 'warning_pump'
+
                     update['warning_pump_flag'] = True
+                    self.logger.warning(f"Perte de vide -> pression = {round(data.get('press_vide'))} bar")
+                    if data.get("state") == "HEATING":
+                        event = 'temperature_reached'
+                    else:
+                        event = 'no_transition'
                     return event, update
 
-        # Si l'état est warning pump -> no_transition si flag toujours activé / end_warning si flag desactivé
-        if data.get("state") == "WARNING_PUMP":
-            if data.get("warning_pump_flag"):
-                event = "no_transition"
-            else:
-                event = 'end_warning'
-            return event, update
-
         # Si état IDLE -> cycle_validated si flag cycle validated activé / no transition sinon
-        elif data.get("state") == "IDLE":
+        if data.get("state") == "IDLE":
 
             if data.get("cycle_validated_flag"):
 

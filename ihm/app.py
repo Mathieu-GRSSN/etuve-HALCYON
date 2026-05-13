@@ -77,8 +77,8 @@ Veuillez vérifier les branchements du TC-08, des thermocouples et du capteur de
 
 Valider pour fermer la fenêtre."""
 
-WARNING_TEXT = """
-La pression mesurée est supérieure à -0.5 bar, ce qui indique un problème de vide.
+WARNING_TEXT = f"""
+A {time.strftime("%H:%M:%S")}, la pression était supérieur à -0.5 bar.
 
 Veuillez vérifier les branchements.
 
