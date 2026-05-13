@@ -178,42 +178,50 @@ ERROR_SENSOR → sécurité fonctionnement capteurs\
 | `ERROR_SENSOR`    | Erreur validée                          | STOP    |
 
 ```mermaid
-flowchart TD
+flowchart LR
 
     classDef folder fill:#FFF9C4,stroke:#BDB76B,stroke-width:2px;
     classDef file fill:#F5F5F5,stroke:#616161,stroke-width:1px;
 
-    ILDE
-    START
-    HEATING
-    HOLD
-    COOLING
-    STOP
-    ERROR_TEMP
-    WARNING_PUMP
-    ERROR_SENSOR
+    ILDE@{ shape: rounded}
+    START@{ shape: rounded}
+    HEATING@{ shape: rounded}
+    HOLD@{ shape: rounded}
+    COOLING@{ shape: rounded}
+    STOP@{ shape: rounded}
+    ERROR_TEMP@{ shape: rounded}
+    ERROR_SENSOR@{ shape: rounded}
 
-    IDLE --> START
-    START --> HEATING
-    HEATING --> HOLD
-    HOLD --> COOLING
-    COOLING --> STOP
-    STOP --> IDLE
+    subgraph Cycle
+        IDLE --> START
+        START --> HEATING
+        HEATING --> HOLD
+        HOLD --> COOLING
+        COOLING --> STOP
+        STOP --> IDLE
 
-    START --> ERROR_SENSOR
-    HEATING --> ERROR_SENSOR
-    HOLD --> ERROR_SENSOR
-    COOLING --> ERROR_SENSOR
+        START --> STOP
+        HEATING --> STOP
+        HOLD --> STOP
+        COOLING --> STOP
+    end
 
-    HEATING --> ERROR_TEMP
-    HOLD --> ERROR_TEMP
+    subgraph Erreurs
+        START --> ERROR_SENSOR
+        HEATING --> ERROR_SENSOR
+        HOLD --> ERROR_SENSOR
+        COOLING --> ERROR_SENSOR
 
-    START --> STOP
-    HEATING --> STOP
-    HOLD --> STOP
-    COOLING --> STOP
-    ERROR_SENSOR --> STOP
-    ERROR_TEMP --> STOP
+        HEATING --> ERROR_TEMP
+        HOLD --> ERROR_TEMP
+
+        ERROR_SENSOR --> STOP
+        ERROR_TEMP --> STOP
+    
+    end
+
+
+
 ```
 
 ## Etat intial (démarrage ou redémarrage)
