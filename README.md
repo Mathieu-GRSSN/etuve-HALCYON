@@ -80,35 +80,7 @@ Le projet est codé entièrement en python.
 
 ## Architecture logicielle
 
-```mermaid
-flowchart LR
-
-    classDef folder fill:#FFF9C4,stroke:#BDB76B,stroke-width:2px;
-    classDef file fill:#F5F5F5,stroke:#616161,stroke-width:1px;
-
-    MAIN[main.py<br/><small>Boucle principale</small>]
-
-    MAIN --> CONTROL[control/]
-    MAIN --> HARDWARE[hardware/]
-    MAIN --> IHM[ihm/]
-    MAIN --> UTILS[utils/]
-
-    CONTROL --> EVENT[event_manager.py<br/><small>Gestion des évènements système</small>]
-    CONTROL --> STATE[state_machine.py<br/><small>Gestion des états système</small>]
-
-    HARDWARE --> CAPTEUR[capteur.py<br/><small>Pilotage du TC-08</small>]
-    HARDWARE --> RELAIS[relais.py<br/><small>Pilotage des relais</small>]
-
-    IHM --> APP[app.py<br/><small>Gestion de l'interface graphique</small>]
-
-    UTILS --> LOGGER[logger.py<br/><small>Gestion des logs</small>]
-    UTILS --> SEND[mail_sender.py<br/><small>Envoie des données par mail</small>]
-    UTILS --> SAVE[save.py<br/><small>Enregistre les données PNG et CSV</small>]
-
-    class CONTROL,HARDWARE,IHM,UTILS folder;
-    class MAIN,EVENT,STATE,CAPTEUR,RELAIS,APP,LOGGER,SEND,SAVE file;
-
-```
+![Schéma architecture logiciel](img/Schéma_architecture_logiciel.png)
 
 # Fonctionnement du système
 
@@ -162,66 +134,18 @@ ERROR_SENSOR → sécurité fonctionnement capteurs\
 
 | état actuel     | Transition                              | état suivant   |
 | --------------- | --------------------------------------- | -------------- |
-| `IDLE`            | Lancement cycle                         | START          |
-| `START`           | init terminée                           | HEATING        |
-| `HEATING`         | min(temp1,temp2) >= TEMP_CIBLE          | HOLD           |
-| `HOLD`            | time_hold >= TIME_HOLD                  | COOLING        |
-| `COOLING`         | max(temp1, temp2) < 40°C                | STOP           |
-| `STOP`            | enregistrements terminés                | IDLE           |
-| `HEATING` `HOLD` or `COOLING` | press_vide > -0.5bar          | WARNING_PUMP   |
-| `START` `HEATING` `HOLD` or `COOLING`           | capteurs non fonctionnels               | ERROR_SENSOR   |
-| `START` or `HEATING` or `HOLD` or `COOLING` | Arrêt utilisateur   | STOP           |
-| `WARNING_PUMP`    | Erreur validée & press_vide < -0.5 bar  | état précédent |
-| `ERROR_SENSOR`    | Erreur validée                          | STOP    |
+| `IDLE`            | Lancement cycle                         | `START`          |
+| `START`           | init terminée                           | `HEATING`        |
+| `HEATING`         | min(temp1,temp2) >= TEMP_CIBLE          | `HOLD`           |
+| `HEATING`         | perte de vide                           | `HOLD`           |
+| `HOLD`            | time_hold >= TIME_HOLD                  | `COOLING`        |
+| `COOLING`         | max(temp1, temp2) < 40°C                | `STOP`           |
+| `STOP`            | enregistrements terminés                | `IDLE`           |
+| `START` `HEATING` `HOLD` or `COOLING`           | capteurs non fonctionnels               | `ERROR_SENSOR`   |
+| `START` or `HEATING` or `HOLD` or `COOLING` | Arrêt utilisateur   | `STOP`           |
+| `ERROR_SENSOR`    | Erreur validée                          | `STOP`    |
 
-```mermaid
-flowchart TB
-
-    subgraph Cycle
-        direction LR
-        IDLE([IDLE])
-        START([START])
-        HEATING([HEATING])
-        HOLD([HOLD])
-        COOLING([COOLING])
-        STOP([STOP])
-
-        IDLE --> START
-        START --> HEATING
-        HEATING --> HOLD
-        HOLD --> COOLING
-        COOLING --> STOP
-        STOP --> IDLE
-
-        START --> STOP
-        HEATING --> STOP
-        HOLD --> STOP
-
-    end
-
-
-
-    subgraph Erreurs
-        direction LR
-        ERROR_SENSOR([ERROR_SENSOR])
-
-        START --> ERROR_SENSOR
-        HEATING --> ERROR_SENSOR
-        HOLD --> ERROR_SENSOR
-        COOLING --> ERROR_SENSOR
-
-        ERROR_SENSOR --> STOP
-    end
-
-    subgraph Warnings
-        direction LR
-        WARNING_PUMP([WARNING_PUMP])
-        ETATX([N'importe quel état])
-
-        WARNING_PUMP --> ETATX
-        ETATX --> WARNING_PUMP
-    end
-```
+![Schéma machine à état](img/Schéma_state.png)
 
 ## Etat intial (démarrage ou redémarrage)
 - tous les relais OFF
@@ -332,18 +256,6 @@ flowchart TB
 - Tous les relais arrêtés
 - Enregistrement terminés : cycle_end
 
-
-## WARNING_PUMP
-**Objectif** :
-- Maintenir le vide
-
-**Actions en entrée d'état** :
-- envoie un message d'alerte
-
-**Conditions de sortie** :
-- la pression du vide redescend en dessous de -0.5bar (press_vide < -0.5 bar)
-- Validation fin erreur par l'utilisateur : error_end
-
 ## ERROR_SENSOR
 **Objectif** :
 - Assurer le bon fonctionnement des capteurs
@@ -357,23 +269,31 @@ flowchart TB
 
 # Interface Homme -Machine
 
-L'IHM est composé d'un seul écran principal composé de 6 cadres:
-- **Etat du système** en haut à gauche
-- **Capteurs** au milieu à gauche
-- **Courbes** en bas à gauche
-- **Choix du cycle** en haut à droite
-- **Etats composants** au milieu à droite
-- **Bouton** : en bas à droite
+L'IHM est composé d'un seul écran principal composé de 6 cadres répartis en deux colonnes :
+| `Colonne gauche` | `Colonne droite` |
+| :----: | :----: |
+| **Etat du système** | **Choix du cycle** |
+| **Capteurs** | **Etats composants** |
+| **Courbes** | **Bouton** |
 
 ## Etat du système
 **Objectif**:
 - Afficher l'état du système
 
 **Compositon**:
-- Etat du système : en gras et grande police 
-- Rond de couleur : 
-    - "IDLE" et "START" en vert, 
-    - autres état en rouge et clignotant
+- Etat du système
+- LED de couleur 
+
+| Etat | Couleur | Clignotement LED |
+| --- | :---: | :---: |
+| IDLE | gris | Non |
+| START | vert | Oui |
+| HEATING | vert | Oui |
+| HOLD | vert | Oui |
+| COOLING | vert | Oui |
+| STOP | gris | Non |
+| ERROR_SENSOR | rouge | Non |
+
 
 ## Capteurs
 **Objectif**:
@@ -381,7 +301,7 @@ L'IHM est composé d'un seul écran principal composé de 6 cadres:
 
 **Composition**:
 - une case par données, deux lignes de quatres cases : 
-    - Nom de la données en petite police en haut à droite
+    - Nom de la données en petite police en haut
     - Valeur de la donnée au centre en grande police :
         - Pour les températures, unitée "°C" après la valeur,
         - Pour la pression, unitées "bar" après la valeur, si PUMP_ACTIVATION = False case grisée
@@ -394,8 +314,7 @@ L'IHM est composé d'un seul écran principal composé de 6 cadres:
 - une courbe affichant les données de capteurs :
     - si PUMP_ACTIVATION = True, 8 donnée (températures + pression). Un axe des ordonnées de chaque coté (Température °C, Pression bar)
     - si PUMP_ACTIVATION = False, 7 donnée (pression). Un seul axe des ordonnées (Température °C)
-- un cadre avec les legendes correspondante à droite de la coubre
-(les valeurs sont enregistrées dans self.all_mesures de la classe capteur)
+- un cadre avec les legendes correspondante à droite de la courbe
 
 ## Choix du cycle
 **Objectif**:
