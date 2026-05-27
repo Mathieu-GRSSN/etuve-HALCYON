@@ -327,21 +327,21 @@ class StateMachine:
 
 
             # Envoie par mail
-            subject = datetime.now().strftime("Données étuve %d-%m-%Y")
-            body = """
-Bonjour,
+#             subject = datetime.now().strftime("Données étuve %d-%m-%Y")
+#             body = """
+# Bonjour,
 
-Voici en pièce jointe les données de l'étuve.
+# Voici en pièce jointe les données de l'étuve.
 
-Les formats sont :
-- CSV : données brutes ;
-- PNG : graphes avec les données.
+# Les formats sont :
+# - CSV : données brutes ;
+# - PNG : graphes avec les données.
 
-Gros bisous,
-L'étuve
-            """
-            send_mail = ms.send_email(receiver,subject,body,filepath_csv, filepath_png)
-            if send_mail == 1:
-                self.logger.info(f'PNG et CSV envoyé par mail à {receiver}')
-            elif send_mail == 0:
-                self.logger.error(f"Envoie PNG et CVS échoué")
+# Gros bisous,
+# L'étuve
+#             """
+#             send_mail = ms.send_email(receiver,subject,body,filepath_csv, filepath_png)
+#             if send_mail == 1:
+#                 self.logger.info(f'PNG et CSV envoyé par mail à {receiver}')
+#             elif send_mail == 0:
+#                 self.logger.error(f"Envoie PNG et CVS échoué")

@@ -79,7 +79,7 @@ def control_loop():
             event, update_em = em.generate_events(snapshot_data)
             data.update(update_em) # Applique les modif de data
 
-        print(f"[Main - EM] Event généré : {event} - State actuel : {data.get('state')}") # DEBUG
+        # print(f"[Main - EM] Event généré : {event} - State actuel : {data.get('state')}") # DEBUG
 
         # Appliquer transitions
         with lock :
@@ -87,7 +87,7 @@ def control_loop():
             updates_sm = sm.transition(event, snapshot_data)
             data.update(updates_sm) # Applique les modif de data
 
-        print(f"[Main - SM] Event généré : {event} - State actuel : {data.get('state')}") # DEBUG
+        # print(f"[Main - SM] Event généré : {event} - State actuel : {data.get('state')}") # DEBUG
         
         # Attendre un peu avant la prochaine itération
         if data.get("min_interval_sensor") is not None:
