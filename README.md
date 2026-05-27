@@ -80,7 +80,7 @@ Le projet est codé entièrement en python.
 
 ## Architecture logicielle
 
-![Schéma architecture logiciel](img/Schéma_architecture_logiciel.png)
+![Schéma architecture logiciel](img/Schéma_architecture_logiciel.jpg)
 
 # Fonctionnement du système
 
@@ -89,7 +89,6 @@ Le projet est codé entièrement en python.
 * affficher les données mesurées instantanées ;
 * affficher les données sous forme de courbes ;
 * choisir le cycle de chauffe (température, durée, pompe) ;
-* saisie de l'adresse mail recevant les données ;
 * visualiser l'activation des relais/composants ;
 * lancer le cycle.
 
@@ -145,7 +144,7 @@ ERROR_SENSOR → sécurité fonctionnement capteurs\
 | `START` or `HEATING` or `HOLD` or `COOLING` | Arrêt utilisateur   | `STOP`           |
 | `ERROR_SENSOR`    | Erreur validée                          | `STOP`    |
 
-![Schéma machine à état](img/Schéma_state.png)
+![Schéma machine à état](img/Schéma_state.jpg)
 
 ## Etat intial (démarrage ou redémarrage)
 - tous les relais OFF
@@ -164,7 +163,6 @@ ERROR_SENSOR → sécurité fonctionnement capteurs\
 - Choix durée maintien → TIME_HOLD  (int)
 - Choix état pompe → PUMP_ACTIVATION (boolean)
 - Choix température arrêt pompe → TEMP_STOP_PUMP (int)
-- Choix de l'adresse mail de reception → RECEIVER_MAIL (str)
 
 **Condition de sortie** :
 - Utilisateur appuie sur le bouton "Valider cycle"
@@ -247,7 +245,7 @@ ERROR_SENSOR → sécurité fonctionnement capteurs\
 - ferme le TC-08
 - Sauvegarde des données capteur en CSV, format : Time, temp1, temp2, temp3, temp4, temp5, temp6, temp7, press_vide
 - Sauvegarde des données capteur en PNG
-- envoie les fichier CSV et PNG par mail
+- Archivage du CSV et PNG sur le serveur NAS : "//HAL_NAS/commun/PROJETS/PROJETS_INTERNES/11_ETUVE/7-Exports"
 
 **Actions pendant l'état** :
 - arrêt tous les relais (relay1, relay2, relay3, relay4 OFF)
