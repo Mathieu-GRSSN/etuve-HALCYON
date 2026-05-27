@@ -378,11 +378,10 @@ class HalcyonIHM:
     # ────────────────────────────────────────────
     def _build_cycle_choice(self, parent):
         """
-        6 cases en 4 lignes :
+        5 cases en 4 lignes :
           Ligne 1 : TEMP_CIBLE | TIME_HOLD 
           Ligne 2 : PUMP_ACTIVATION | TEMP_STOP_PUMP 
-          Ligne 3 : SEND_DATA_MAIL
-          Ligne 4 : Bouton Valider cycle
+          Ligne 3 : Bouton Valider cycle
 
         Cases TEMP_CIBLE, TIME_HOLD, TEMP_STOP_PUMP :
           - nom de la donnée en petit, aligné en haut à droite
@@ -394,20 +393,17 @@ class HalcyonIHM:
           - nom de la donnée en petit, aligné en haut à droite
           - Bouton ON / OFF
 
-        Case SEND_DATA_MAIL :
-          - nom de la donnée en petit, aligné en haut à droite
-          - zone de texte
+ 
         """
         title = "paramètres cycle"
         card = make_card(parent, title)
-        card.pack(fill="both",expand=True, pady=(0, 6))
+        card.pack(fill="both",expand=True, pady=(0, 6), ipady = 10)
 
         # Variables
         self._var_temp = tk.IntVar(value=self.data.get("TEMP_CIBLE", 120))
         self._var_hold = tk.IntVar(value=self.data.get("TIME_HOLD", 30))
         self._var_pump = tk.BooleanVar(value=bool(self.data.get("PUMP_ACTIVATION", True)))
         self._var_temp_pump = tk.IntVar(value=self.data.get("TEMP_STOP_PUMP", 70))
-        self._var_mail = tk.StringVar(value = "mathieu.grossin@halcyon-performance.com")
 
         # Vérification bonne saisie SpinBox
         def _validate_temp(new_value):
@@ -546,22 +542,6 @@ class HalcyonIHM:
             side="left", padx=4)
 
         # LIGNE 3
-        row3 = tk.Frame(card, bg=BG2)
-        row3.pack(side = "top",fill="x", expand=True, padx=10, pady=(0, 10))
-
-        row3.columnconfigure(0, weight=50, uniform="group1")  # gauche
-        row3.columnconfigure(1, weight=50, uniform="group1")  # droite
-        row3.rowconfigure(0, weight=1)
-
-        self._lbl_mail = tk.Label(row3, text="Email de reception des données", bg=BG2, fg=FG_DIM, font=FONT_MED)
-        self._lbl_mail.pack(pady=(4, 0))
-
-        self._entry_mail = tk.Entry(row3, textvariable=self._var_mail,  
-                    font=FONT_LABEL, bg=BG3,fg=FG, insertbackground=FG, justify="center",
-                    relief="flat", highlightbackground=BORDER, highlightthickness=1)
-        self._entry_mail.pack(fill="both", padx=10, pady=10)
-
-        # LIGNE 4
         row4 = tk.Frame(card, bg=BG2)
         row4.pack(side = "top",fill="x", expand=True, padx=10, pady=(0, 10))
 
@@ -577,7 +557,7 @@ class HalcyonIHM:
         self._btn_validate.pack(fill="both", padx=10, pady=10)
 
         # Liste des zones de saisie et des boutons
-        self._spin_cycle = [ self._spin_temp,  self._spin_time,  self._spin_temp_hold, self._entry_mail]
+        self._spin_cycle = [ self._spin_temp,  self._spin_time,  self._spin_temp_hold]
         
     # ────────────────────────────────────────────
     # ACTIVATION DES COMPOSANTS
@@ -596,7 +576,7 @@ class HalcyonIHM:
         """
         title = "activation composants"
         card = make_card(parent, title)
-        card.pack(fill="x", expand=True, pady=(0, 6))
+        card.pack(fill="x", expand=True, pady=(0, 6), ipady = 6)
 
         COMPS = [
             ("ventilation_activated", "Ventilation"),
@@ -890,7 +870,6 @@ class HalcyonIHM:
             self.data["TIME_HOLD"]       = int(self._var_hold.get())
             self.data["PUMP_ACTIVATION"] = self._var_pump.get()
             self.data["TEMP_STOP_PUMP"]  = int(self._var_temp_pump.get()) if self._var_pump.get() else 0
-            self.data["RECEIVER_MAIL"]   = self._var_mail.get()
 
             # signal pour l'event_manager
             self.data["cycle_validated_flag"] = True
@@ -1081,8 +1060,7 @@ class HalcyonIHM:
             "Température cible": [f"{self._var_temp.get()} °C", FONT_BIG],
             "Durée": [f"{self._var_hold.get()} min", FONT_BIG],
             "Pompe": ["Oui" if self._var_pump.get() else "Non", FONT_BIG],
-            "Température arrêt pompe": [f"{self._var_temp_pump.get()} °C" if self._var_pump.get() else "N/A", FONT_BIG],
-            "Mail de réception": [f"{self._var_mail.get()}", FONT_LABEL],
+            "Température arrêt pompe": [f"{self._var_temp_pump.get()} °C" if self._var_pump.get() else "N/A", FONT_BIG]
         }
 
         for i, (key, value) in enumerate(text.items()):
@@ -1121,7 +1099,6 @@ class HalcyonIHM:
             self._var_hold.set(self.data.get("TIME_HOLD", 30))
             self._var_pump.set(bool(self.data.get("PUMP_ACTIVATION", True)))
             self._var_temp_pump.set(self.data.get("TEMP_STOP_PUMP", 70))
-            self._var_mail.set(self.data.get("RECEIVER_MAIL", "mathieu.grossin@halcyon-performance.com"))
 
         # Reset courbes
         self._ax_t.remove()

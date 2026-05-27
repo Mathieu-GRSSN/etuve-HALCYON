@@ -1,7 +1,6 @@
 from datetime import datetime
 import copy
 import utils.save as us
-import utils.mail_sender as ms
 import utils.archive_nas as an
 import threading
 
@@ -199,10 +198,9 @@ class StateMachine:
             # Récupère les données 
             all_mesures = self.capteurs.get_all_mesures()
             pressure = self.data["PUMP_ACTIVATION"]
-            receiver = self.data["RECEIVER_MAIL"]
 
-            # Lance le thread d'enregistrement et d'envoie mail (pour éviter de bloquer l'interface)
-            threading.Thread(target=self._save_and_send,args=(all_mesures, pressure, receiver),daemon=True).start()
+            # Lance le thread d'enregistrement et d'archivage (pour éviter de bloquer l'interface)
+            threading.Thread(target=self._save_and_archive,args=(all_mesures, pressure),daemon=True).start()
 
             return update
         
@@ -303,7 +301,7 @@ class StateMachine:
         update.update(mesure)
         return update
     
-    def _save_and_send(self, all_mesures, pressure, receiver):
+    def _save_and_archive(self, all_mesures, pressure):
             # Enregistre sous PNG les courbes
             save_graph, filepath_png = us.save_graph(all_mesures,pressure)
             if save_graph == 1:
@@ -325,23 +323,3 @@ class StateMachine:
             else:
                 self.logger.error(f"Archivage CSV et PNG sur NAS échoué")
 
-
-            # Envoie par mail
-#             subject = datetime.now().strftime("Données étuve %d-%m-%Y")
-#             body = """
-# Bonjour,
-
-# Voici en pièce jointe les données de l'étuve.
-
-# Les formats sont :
-# - CSV : données brutes ;
-# - PNG : graphes avec les données.
-
-# Gros bisous,
-# L'étuve
-#             """
-#             send_mail = ms.send_email(receiver,subject,body,filepath_csv, filepath_png)
-#             if send_mail == 1:
-#                 self.logger.info(f'PNG et CSV envoyé par mail à {receiver}')
-#             elif send_mail == 0:
-#                 self.logger.error(f"Envoie PNG et CVS échoué")
