@@ -2,6 +2,7 @@ from datetime import datetime
 import copy
 import utils.save as us
 import utils.mail_sender as ms
+import utils.archive_nas as an
 import threading
 
 class StateMachine:
@@ -316,6 +317,14 @@ class StateMachine:
                 self.logger.info(f'Données sauvegarder en CSV')
             elif save_mesures == 0:
                 self.logger.error(f"Enregistrement des données en CSV échoué")
+
+            # Enregistrement sur NAS
+            archive = an.archive_images(filepath_csv, filepath_png)
+            if archive:
+                self.logger.info(f'CSV et PNG archivé sur NAS')
+            else:
+                self.logger.error(f"Archivage CSV et PNG sur NAS échoué")
+
 
             # Envoie par mail
             subject = datetime.now().strftime("Données étuve %d-%m-%Y")
