@@ -141,6 +141,7 @@ ERROR_SENSOR → sécurité fonctionnement capteurs\
 | `COOLING`         | max(temp1, temp2) < 40°C                | `STOP`           |
 | `STOP`            | enregistrements terminés                | `IDLE`           |
 | `START` `HEATING` `HOLD` or `COOLING`           | capteurs non fonctionnels               | `ERROR_SENSOR`   |
+| `START` `HEATING` `HOLD`        | température > 250°C               | `ERROR_TEMP`   |
 | `START` or `HEATING` or `HOLD` or `COOLING` | Arrêt utilisateur   | `STOP`           |
 | `ERROR_SENSOR`    | Erreur validée                          | `STOP`    |
 
@@ -260,6 +261,17 @@ ERROR_SENSOR → sécurité fonctionnement capteurs\
 
 **Actions en entrée d'état** :
 - envoie un message d'alerte si le TC-08 s'initalise mal
+- arret relay
+
+**Conditions de sortie** :
+- Validation fin erreur par l'utilisateur : error_end
+
+## ERROR_TEMP
+**Objectif** :
+- Signaler une température trop élevé
+
+**Actions en entrée d'état** :
+- envoie un message d'alerte si la température dépasse 250°C
 - arret relay
 
 **Conditions de sortie** :

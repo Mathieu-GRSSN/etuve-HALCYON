@@ -123,7 +123,7 @@ class Capteur:
             "Time": datetime.now(),
             "temp1": temp_buffer[1],
             "temp2": temp_buffer[1], # 1 pour tester, 2 en situation réelle
-            "temp3": temp_buffer[3],
+            "temp3": temp_3_error(temp_buffer[3]), # fonction pour tester error_temp
             "temp4": temp_buffer[4],
             "temp5": temp_buffer[5],
             "temp6": temp_buffer[6],
@@ -166,7 +166,7 @@ class Capteur:
         
 
 # ─────────────────────────────────────────────    
-# SIMULATION PRESSION
+# SIMULATION PRESSION et TEMPERATURE
 # ─────────────────────────────────────────────
 def press_vide_simu():
     import random
@@ -178,3 +178,14 @@ def press_vide_simu():
         press_vide = -0.9 + random.random()*0.05
 
     return press_vide
+
+def temp_3_error(buffer3):
+    import random
+
+    random_fail = random.randint(1,50)
+    if random_fail == 50:
+        temp3 = 300
+    else:
+        temp3 = buffer3
+
+    return temp3

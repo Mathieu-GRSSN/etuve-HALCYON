@@ -52,6 +52,7 @@ STATE_COLORS = {
     "COOLING": GREEN,
     "STOP": FG_DIM,
     "ERROR_SENSOR": RED,
+    "ERROR_TEMP": RED,
 }
 
 # états où le rond doit clignoter (hors IDLE/STOP)
@@ -70,10 +71,17 @@ TITLE_GRAPH=[
 # ─────────────────────────────────────────────
 #  TEXTES POPUP
 # ─────────────────────────────────────────────
-ERROR_TEXT = """
+ERROR_SENSOR_TEXT = """
 Une erreur a été détectée avec le TC-08.
 
 Veuillez vérifier les branchements du TC-08, des thermocouples et du capteur de pression et relancer le cycle.
+
+Valider pour fermer la fenêtre."""
+
+ERROR_TEMP_TEXT = """
+Une erreur de température a été détectée.
+
+Veulliez vérifier le risque d'incendie.
 
 Valider pour fermer la fenêtre."""
 
@@ -662,12 +670,17 @@ class HalcyonIHM:
         elif snapshot_data.get("error_sensor_flag"):
             self._popup_error_exist = True
 
-            make_popup(self.window,"Erreur capteur", self._on_validate_popup, ERROR_TEXT, snapshot_data)
+            make_popup(self.window,"Erreur capteur", self._on_validate_popup, ERROR_SENSOR_TEXT, snapshot_data)
         
         elif snapshot_data.get("warning_pump_flag"):
             self._popup_error_exist = True
 
             make_popup(self.window,"warning pression", self._on_validate_popup, WARNING_TEXT, snapshot_data)
+
+        elif snapshot_data.get("error_temp_flag"):
+            self._popup_error_exist = True
+
+            make_popup(self.window,"Erreur température", self._on_validate_popup, ERROR_TEMP_TEXT, snapshot_data)
             
         else :
             self._popup_error_exist = False
@@ -900,6 +913,10 @@ class HalcyonIHM:
             if snapshot.get("warning_pump_flag"):
                 # signal pour l'event_manager
                 self.data["warning_pump_flag"] = False
+
+            if snapshot.get("error_temp_flag"):
+                # signal pour l'event_manager
+                self.data["error_temp_flag"] = False
 
         popup.destroy()
         self._popup_error_exist = False

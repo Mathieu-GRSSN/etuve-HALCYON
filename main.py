@@ -1,4 +1,5 @@
 import time
+import subprocess
 
 from hardware.capteur import Capteur
 from hardware.relais import Relais
@@ -56,6 +57,7 @@ data = {
     "force_stop_flag": False,
     "cycle_finished_flag": False,
     "error_sensor_flag": False,
+    "error_temp_flag": False,  
     "warning_pump_flag":False,
 }
 
@@ -111,4 +113,11 @@ except Exception as e:
     logger.error(f"Erreur dans le main")
 
 finally:
+    # Ferme correctement les relais
     relais.cleanup()
+    
+    # Ferme le TC-08
+    capteurs.close_connection()
+
+    # reboot la raspberry
+    # subprocess.run(["sudo", "reboot"])

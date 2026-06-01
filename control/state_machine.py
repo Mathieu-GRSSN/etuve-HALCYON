@@ -5,6 +5,7 @@ import utils.archive_nas as an
 import threading
 
 HYSTERESIS_HOLD = 2.5 # Hysteresis pour éviter les oscillations de relais
+TEMP_MAX = 200 # Température max pour arrêt chauffage
 
 class StateMachine:
     def __init__(self, relais, capteurs, ihm, data, logger, lock):
@@ -56,7 +57,13 @@ class StateMachine:
             update["state"] = "ERROR_SENSOR"
             return update
         
-
+        if event == 'error_temp':
+            
+            self.logger.error("ERROR TEMP")
+            update = self.on_enter("ERROR_TEMP")
+            update["state"] = "ERROR_TEMP"
+            return update
+        
 
         if event in self.list_transition:
             new_state = self.states_fonc[self.data["state"]](event)
@@ -129,13 +136,21 @@ class StateMachine:
         update["state"] = self.data["state"]
 
         if state == "ERROR_SENSOR":
-            if self.data["ventilation_activated"] or self.data["P1_activated"] or self.data["P2_activated"] or self.data["pump_activated"]:
-                self.relais.all_relay_off()
-                update["ventilation_activated"] = False
-                update["P1_activated"] = False
-                update["P2_activated"] = False
-                update["pump_activated"] = False
+            self.relais.all_relay_off()
+            update["ventilation_activated"] = False
+            update["P1_activated"] = False
+            update["P2_activated"] = False
+            update["pump_activated"] = False
             return update
+        
+        if state == "ERROR_TEMP":
+            self.relais.all_relay_off()
+            update["ventilation_activated"] = False
+            update["P1_activated"] = False
+            update["P2_activated"] = False
+            update["pump_activated"] = False
+            return update
+        
         
         if state == "WARNING_PUMP":
             if self.data["P1_activated"] or self.data["P2_activated"]:
@@ -284,6 +299,12 @@ class StateMachine:
             if self.data["pump_activated"]:
                 update["pump_activated"] = False
 
+            update["previous_state"] = self.data["state"]
+            return update
+        
+        elif state == "ERROR_TEMP":
+            mesure = self.capteurs.lire_instantane(self.data["PUMP_ACTIVATION"])
+            update = mesure
             update["previous_state"] = self.data["state"]
             return update
         

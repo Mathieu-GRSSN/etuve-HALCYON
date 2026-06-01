@@ -24,7 +24,7 @@ class EventManager:
             event = 'force_stop'
             return event, update
         
-        # Si la machine n'est pas en été d'error sensor, vérifie s'il n'y a pas de problème
+        # Si la machine n'est pas déjà en error sensor, vérifie s'il n'y a pas de problème
         if data.get('error_sensor_flag') == False :
             # Si une des valeurs est None (pas captée) -> error_sensor
             if None in temp_list:
@@ -39,6 +39,14 @@ class EventManager:
                     event='error_sensor'
                     return event, update
                 
+        # Si la machine n'est pas déjà en error temp, vérifie s'il n'y a pas de problème
+        if data.get('error_temp_flag') == False :
+            # Si une des valeurs est None (pas captée) -> error_sensor
+            if max(temp_list)>=250:
+                update['error_temp_flag'] = True
+                event='error_temp'
+                return event, update
+                
         # Si la température maximale atteinte (200°C) -> stop_heat (vérifie d'abord None pour éviter problème lors error_sensor)
         if not None in temp_list:
             if max(temp_list)>=200:
@@ -48,6 +56,14 @@ class EventManager:
         # Si l'état est error sensor -> no_transition si flag toujours activé / end_error si flag desactivé
         if data.get("state") == "ERROR_SENSOR":
             if data.get("error_sensor_flag"):
+                event = "no_transition"
+            else:
+                event = 'end_error'
+            return event, update
+        
+        # Si l'état est error temp -> no_transition si flag toujours activé / end_error si flag desactivé
+        if data.get("state") == "ERROR_TEMP":
+            if data.get("error_temp_flag"):
                 event = "no_transition"
             else:
                 event = 'end_error'
