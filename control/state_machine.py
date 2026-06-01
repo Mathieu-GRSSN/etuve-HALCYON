@@ -4,6 +4,8 @@ import utils.save as us
 import utils.archive_nas as an
 import threading
 
+HYSTERESIS_HOLD = 2.5 # Hysteresis pour éviter les oscillations de relais
+
 class StateMachine:
     def __init__(self, relais, capteurs, ihm, data, logger, lock):
         self.data_initial = copy.deepcopy(data) # sauvegarde des valeurs initiles
@@ -244,11 +246,11 @@ class StateMachine:
 
             temp_min_tool = min(self.data["temp1"], self.data["temp2"])
 
-            if temp_min_tool < self.data.get("TEMP_CIBLE") - 2 and not self.data["P1_activated"]:
+            if temp_min_tool < self.data.get("TEMP_CIBLE") - HYSTERESIS_HOLD and not self.data["P1_activated"]:
                 self.relais.heating_P1_on()
                 update["P1_activated"] = True
                 
-            elif temp_min_tool > self.data.get("TEMP_CIBLE") + 2 and self.data["P1_activated"]:
+            elif temp_min_tool > self.data.get("TEMP_CIBLE") + HYSTERESIS_HOLD and self.data["P1_activated"]:
                 self.relais.heating_P1_off()
                 update["P1_activated"] = False
 

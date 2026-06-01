@@ -213,7 +213,7 @@ ERROR_SENSOR → sécurité fonctionnement capteurs\
 - enregistrement de l'heure de début : time_start_hold
 
 **Actions pendant l'état** :
-- logique ON/OFF première puissance sensibilité +/- 2°C (relay3 ON/OFF)
+- logique ON/OFF première puissance sensibilité avec hystérésys de 2.5°C (relay3 ON/OFF)
 - mesure des capteurs
 - limite la température maximale (200°c)
 
