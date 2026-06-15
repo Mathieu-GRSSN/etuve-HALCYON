@@ -109,10 +109,10 @@ class Capteur:
         else:
             # Converti la valeur et l'enregistre si la pump est activée
             if is_pressure:
-                if temp_buffer[8] > 0.5 and temp_buffer[8] < 4.5:
-                    press_vide = 1/4* temp_buffer[8] - 9/8
+                if temp_buffer[8] > 4 and temp_buffer[8] < 20:
+                    press_vide = 1/16* temp_buffer[8] - 5/4
                 else:
-                    press_vide = 'ERROR_SENSOR'
+                    press_vide = None
 
                 press_vide = press_vide_simu()
             else:

@@ -26,6 +26,8 @@ RELAIS_ID = {
     "RELAY2_R15kW": 15,
     "RELAY3_R7.5kW": 18,
     "RELAY4_PUMP": 23,
+    "RELAY5_SERVO": 24,
+    "RELAY6_ALARME": 25,
 }
 
 

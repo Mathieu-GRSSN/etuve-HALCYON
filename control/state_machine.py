@@ -137,6 +137,7 @@ class StateMachine:
 
         if state == "ERROR_SENSOR":
             self.relais.all_relay_off()
+            self.relais.alarm_on()
             update["ventilation_activated"] = False
             update["P1_activated"] = False
             update["P2_activated"] = False
@@ -145,6 +146,7 @@ class StateMachine:
         
         if state == "ERROR_TEMP":
             self.relais.all_relay_off()
+            self.relais.alarm_on()
             update["ventilation_activated"] = False
             update["P1_activated"] = False
             update["P2_activated"] = False
@@ -153,6 +155,7 @@ class StateMachine:
         
         
         if state == "WARNING_PUMP":
+            self.relais.alarm_on()
             if self.data["P1_activated"] or self.data["P2_activated"]:
                 self.relais.heating_Pmax_off()
                 update["P1_activated"] = False
@@ -205,6 +208,9 @@ class StateMachine:
             return update
 
         elif state == "STOP":
+            #  Coupe l'alarme
+            self.relais.alarm_off()
+            
             # Coupe la ventilation
             self.relais.ventilation_off()
             update["ventilation_activated"] = False

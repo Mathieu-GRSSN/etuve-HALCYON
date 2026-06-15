@@ -86,6 +86,34 @@ class Relais:
         self.logger.info(f'RELAY4_PUMP - GPIO{self.RELAIS_ID.get("RELAY4_PUMP")} -> LOW')
         # print("[relais] Pump LOW")
 
+    # Set servo to high (open)
+    def servo_open(self):
+        GPIO.output(self.RELAIS_ID.get("RELAY5_SERVO"), GPIO.HIGH)
+
+        self.logger.info(f'RELAY5_SERVO - GPIO{self.RELAIS_ID.get("RELAY5_SERVO")} -> HIGH')
+        # print("[relais] Servo ON")
+
+    # Set servo to low (close)
+    def servo_close(self):
+        GPIO.output(self.RELAIS_ID.get("RELAY5_SERVO"), GPIO.LOW)
+
+        self.logger.info(f'RELAY5_SERVO - GPIO{self.RELAIS_ID.get("RELAY5_SERVO")} -> LOW')
+        # print("[relais] Servo OFF")
+    
+    # Set alarm to high (on)
+    def alarm_on(self):
+        GPIO.output(self.RELAIS_ID.get("RELAY6_ALARME"), GPIO.HIGH)
+
+        self.logger.info(f'RELAY6_ALARME - GPIO{self.RELAIS_ID.get("RELAY6_ALARME")} -> HIGH')
+        # print("[relais] Alarm ON")
+
+    # Set alarm to low (off)
+    def alarm_off(self):
+        GPIO.output(self.RELAIS_ID.get("RELAY6_ALARME"), GPIO.LOW)
+
+        self.logger.info(f'RELAY6_ALARME - GPIO{self.RELAIS_ID.get("RELAY6_ALARME")} -> LOW')
+        # print("[relais] Alarm OFF")
+
     # Set all relay to low (off)
     def all_relay_off(self):
         for relay in self.RELAIS_ID:
