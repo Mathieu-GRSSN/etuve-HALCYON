@@ -173,7 +173,7 @@ class StateMachine:
             return update
 
         if state == "START":
-            self.relais.servo_on()
+            self.relais.servo_close()
             update["servo_activated"] = True
             update["sensor_activated"], update["min_interval_sensor"] = self.capteurs.configure_channels()
 
@@ -205,18 +205,18 @@ class StateMachine:
 
         elif state == "COOLING":
             self.relais.heating_Pmax_off()
-            self.relais.servo_off()
+            self.relais.servo_open()
             update["servo_activated"] = False
             update["P1_activated"] = False
             update["P2_activated"] = False
             return update
 
         elif state == "STOP":
-            #  Coupe l'alarme
-            self.relais.alarm_off()
-
-            # Coupe la ventilation
-            self.relais.ventilation_off()
+            #  Coupe tous les relais
+            self.relais.all_relay_off()
+            update["P1_activated"] = False
+            update["P2_activated"] = False
+            update["pump_activated"] = False
             update["ventilation_activated"] = False
 
             # Ferme le TC-08

@@ -114,16 +114,17 @@ class Capteur:
                 else:
                     press_vide = None
 
-                press_vide = press_vide_simu()
+                # press_vide = press_vide_simu()
             else:
                 press_vide = None
+            print(f"[capteur] Pression vide : {press_vide} - buffer : {temp_buffer[8]}") # DEBUG
 
         # Organisation des données dans un dictionnaire
         mesures = {
             "Time": datetime.now(),
             "temp1": temp_buffer[1],
             "temp2": temp_buffer[1], # 1 pour tester, 2 en situation réelle
-            "temp3": temp_3_error(temp_buffer[3]), # fonction pour tester error_temp
+            "temp3": temp_buffer[3], # fonction pour tester error_temp
             "temp4": temp_buffer[4],
             "temp5": temp_buffer[5],
             "temp6": temp_buffer[6],
