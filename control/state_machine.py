@@ -173,6 +173,8 @@ class StateMachine:
             return update
 
         if state == "START":
+            self.relais.servo_on()
+            update["servo_activated"] = True
             update["sensor_activated"], update["min_interval_sensor"] = self.capteurs.configure_channels()
 
             if not update["sensor_activated"] and update["min_interval_sensor"] < 0 :
@@ -203,6 +205,8 @@ class StateMachine:
 
         elif state == "COOLING":
             self.relais.heating_Pmax_off()
+            self.relais.servo_off()
+            update["servo_activated"] = False
             update["P1_activated"] = False
             update["P2_activated"] = False
             return update
@@ -210,7 +214,7 @@ class StateMachine:
         elif state == "STOP":
             #  Coupe l'alarme
             self.relais.alarm_off()
-            
+
             # Coupe la ventilation
             self.relais.ventilation_off()
             update["ventilation_activated"] = False
