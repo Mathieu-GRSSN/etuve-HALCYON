@@ -4,6 +4,7 @@ import shutil
 import os
 import time
 import pwd
+from datetime import datetime
 
 # =========================
 # CONFIGURATION NAS
@@ -125,8 +126,22 @@ def archive_images(csv_path, png_path, max_retries=3):
             print(f"Fichier introuvable : {file_path}")
             continue
 
+        # Détermine le dossier jour (YY-MM-DD) à partir du timestamp du fichier
+        try:
+            date_folder = datetime.fromtimestamp(file_path.stat().st_mtime).strftime("%Y-%m-%d")
+        except Exception:
+            date_folder = datetime.now().strftime("%Y-%m-%d")
+
+        destination_dir = NAS_DIR / date_folder
+        # Crée le répertoire sur le point de montage NAS
+        try:
+            os.makedirs(destination_dir, exist_ok=True)
+        except PermissionError:
+            # Peut nécessiter sudo si permissions restreintes
+            pass
+
         # Utilise le nom original du fichier
-        destination = NAS_DIR / file_path.name
+        destination = destination_dir / file_path.name
         
         success = False
         
@@ -155,6 +170,11 @@ def archive_images(csv_path, png_path, max_retries=3):
                 if attempt < max_retries - 1:
                     try:
                         print(f"  → Tentative fallback avec sudo...")
+                        # assure que le répertoire destination existe avec sudo
+                        try:
+                            subprocess.run(["sudo", "mkdir", "-p", str(destination_dir)], check=True, capture_output=True)
+                        except Exception:
+                            pass
                         subprocess.run(
                             ["sudo", "cp", str(file_path), str(destination)],
                             check=True,

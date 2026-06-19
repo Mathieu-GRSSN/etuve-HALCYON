@@ -28,7 +28,8 @@ def get_unique_filepath(filepath):
 def save_all_mesures(mesures):
 
     try :
-        DATA_DIR = "data"
+        date_folder = datetime.now().strftime("%Y-%m-%d")
+        DATA_DIR = os.path.join("data", date_folder)
         os.makedirs(DATA_DIR, exist_ok=True)
 
         filename = datetime.now().strftime("data-%Y-%m-%d.csv")
@@ -65,7 +66,8 @@ def save_graph(mesures, pressure):
     _press_color = FG
 
     try :
-        DATA_DIR = "data"
+        date_folder = datetime.now().strftime("%Y-%m-%d")
+        DATA_DIR = os.path.join("data", date_folder)
         os.makedirs(DATA_DIR, exist_ok=True)
 
         filename = datetime.now().strftime("data-%Y-%m-%d.png")
