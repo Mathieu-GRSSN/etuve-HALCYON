@@ -291,31 +291,31 @@ class HalcyonIHM:
 
         # Ligne haute: TEMP 1-4
 
-        self._lbl_temp1 = self._make_data_value(inner, "TEMP 1", "°C")
+        self._lbl_temp1 = self._make_data_value(inner, "1-Outil", "°C")
         self._lbl_temp1["frame"].grid(row=0, column=0, padx=(0, 6))
 
-        self._lbl_temp2 = self._make_data_value(inner, "TEMP 2", "°C")
+        self._lbl_temp2 = self._make_data_value(inner, "2-Outil", "°C")
         self._lbl_temp2["frame"].grid(row=0, column=1, padx=(0, 6))
 
-        self._lbl_temp3 = self._make_data_value(inner, "TEMP 3", "°C")
+        self._lbl_temp3 = self._make_data_value(inner, "3-Entrée air", "°C")
         self._lbl_temp3["frame"].grid(row=0, column=2, padx=(0, 6))
 
-        self._lbl_temp4 = self._make_data_value(inner, "TEMP 4", "°C")
+        self._lbl_temp4 = self._make_data_value(inner, "4-Sortie air", "°C")
         self._lbl_temp4["frame"].grid(row=0, column=3, padx=(0, 6))
 
 
         # Ligne basse: TEMP 5-7 et PRESSION
 
-        self._lbl_temp5 = self._make_data_value(inner, "TEMP 5", "°C")
+        self._lbl_temp5 = self._make_data_value(inner, "5-Mur fond", "°C")
         self._lbl_temp5["frame"].grid(row=1, column=0, padx=(0, 6))
 
-        self._lbl_temp6 = self._make_data_value(inner, "TEMP 6", "°C")
+        self._lbl_temp6 = self._make_data_value(inner, "6-Mur droit", "°C")
         self._lbl_temp6["frame"].grid(row=1, column=1, padx=(0, 6))
 
-        self._lbl_temp7 = self._make_data_value(inner, "TEMP 7", "°C")
+        self._lbl_temp7 = self._make_data_value(inner, "7-Mur gauche", "°C")
         self._lbl_temp7["frame"].grid(row=1, column=2, padx=(0, 6))
 
-        self._lbl_press = self._make_data_value(inner, "PRESSION", "bar")
+        self._lbl_press = self._make_data_value(inner, "8-Vide", "bar")
         self._lbl_press["frame"].grid(row=1, column=3, padx=(0, 6))
 
     def _make_data_value(self, parent, label, unit):
@@ -360,12 +360,12 @@ class HalcyonIHM:
         ]
         self._temp_keys = [f"temp{i}" for i in range(1, 8)]
         self._temp_names = [
-            "Temp 1", "Temp 2", "Temp 3", "Temp 4",
-            "Temp 5", "Temp 6", "Temp 7"
+            "1-Outil", "2-Outil", "3-Entrée air", "4-Sortie air",
+            "5-Mur fond", "6-Mur droit", "7-Mur gauche"
         ]
         self._press_color = FG
 
-        # Cr�er les lignes une seule fois, vides
+        # Créer les lignes une seule fois, vides
         self._temp_lines = []
         for i, name in enumerate(self._temp_names):
             line, = self._ax_t.plot([], [], color=self._temp_colors[i],
@@ -374,7 +374,7 @@ class HalcyonIHM:
 
         self._press_line, = self._ax_p.plot([], [], color=self._press_color,
                                             linewidth=1.0, linestyle="--",
-                                            label="Pression")
+                                            label="8-Vide")
 
         self._ax_t.legend(loc="upper left", fontsize=8, facecolor=BG3,
                         framealpha=0.8, edgecolor="#CCCCCC")
