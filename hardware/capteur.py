@@ -29,7 +29,9 @@ class Capteur:
             "press_vide": []
         }
 
-    def configure_channels(self):
+    def configure_channels(self, nb_channels):
+
+        self.channels_activated = nb_channels
 
         # 1. Ouverture de l'unité
         open_unit = tc08.usb_tc08_open_unit() # open le driver pico TC-08 et attribut un identifiant
@@ -68,13 +70,14 @@ class Capteur:
                         self.logger.error(f"Capteur {i} non configuré") 
                         return False, -1
                         
-                # Canal 8 : Tension de sortie du capteur de pression (CP01)
-                set_channel = tc08.usb_tc08_set_channel(self.chandle, 8, capteur_voltage)
-                if set_channel == 1:
-                    self.logger.info(f"Capteur {8} configuré en capteur X") 
-                else:
-                    self.logger.error(f"Capteur {8} non configuré") 
-                    return False, -1
+                if self.channels_activated == 8:
+                    # Canal 8 : Tension de sortie du capteur de pression (CP01)
+                    set_channel = tc08.usb_tc08_set_channel(self.chandle, 8, capteur_voltage)
+                    if set_channel == 1:
+                        self.logger.info(f"Capteur {8} configuré en capteur X") 
+                    else:
+                        self.logger.error(f"Capteur {8} non configuré") 
+                        return False, -1
 
                 # Récupère la plus petite intervalle
                 _min_interval =tc08.usb_tc08_get_minimum_interval_ms(self.chandle)
@@ -125,7 +128,7 @@ class Capteur:
         mesures = {
             "Time": datetime.now(),
             "temp1": temp_buffer[1],
-            "temp2": temp_buffer[1], # 1 pour tester, 2 en situation réelle
+            "temp2": temp_buffer[2], # 1 pour tester, 2 en situation réelle
             "temp3": temp_buffer[3], # fonction pour tester error_temp
             "temp4": temp_buffer[4],
             "temp5": temp_buffer[5],

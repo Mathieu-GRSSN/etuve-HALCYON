@@ -6,6 +6,7 @@ import threading
 
 HYSTERESIS_HOLD = 2.5 # Hysteresis pour éviter les oscillations de relais
 TEMP_MAX = 200 # Température max pour arrêt chauffage
+DIFF_MAX = 5 # Différence max entre les deux sondes pour éviter que l'une chauffe trop par rapport à l'autre
 
 class StateMachine:
     def __init__(self, relais, capteurs, ihm, data, logger, lock):
@@ -174,8 +175,9 @@ class StateMachine:
 
         if state == "START":
             self.relais.servo_close()
-            update["servo_activated"] = True
-            update["sensor_activated"], update["min_interval_sensor"] = self.capteurs.configure_channels()
+
+            nb_channels = 8 if self.data.get("PUMP_ACTIVATION") else 7
+            update["sensor_activated"], update["min_interval_sensor"] = self.capteurs.configure_channels(nb_channels)
 
             if not update["sensor_activated"] and update["min_interval_sensor"] < 0 :
                 return update
@@ -257,8 +259,24 @@ class StateMachine:
             update = mesure
             update["previous_state"] = self.data["state"]
 
+            temp_min_tool = min(self.data["temp1"], self.data["temp2"])
+            temp_max_tool = max(self.data["temp1"], self.data["temp2"])
+
+            print(f"[StateMachine] Temp min : {temp_min_tool:.2f} | Temp max : {temp_max_tool:.2f}")
+
             # Si les chauffages sont arrétés (ex: 200°c dépassé) rallume
             if (not self.data["P1_activated"]) and (not self.data["P2_activated"]) :
+                self.relais.heating_Pmax_on()
+                update["P1_activated"] = True
+                update["P2_activated"] = True
+
+            # 
+            elif temp_max_tool > temp_min_tool + DIFF_MAX :
+                self.relais.heating_Pmax_off()
+                update["P1_activated"] = False
+                update["P2_activated"] = False
+                
+            else:
                 self.relais.heating_Pmax_on()
                 update["P1_activated"] = True
                 update["P2_activated"] = True

@@ -921,7 +921,7 @@ class HalcyonIHM:
         popup.destroy()
         self._popup_error_exist = False
 
-        if snapshot.get("error_sensor_flag"):
+        if snapshot.get("error_sensor_flag") or snapshot.get("error_temp_flag"):
             self._quit()
  
     def _not_validated(self, popup):
