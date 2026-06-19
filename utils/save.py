@@ -31,7 +31,7 @@ def save_all_mesures(mesures):
         DATA_DIR = "data"
         os.makedirs(DATA_DIR, exist_ok=True)
 
-        filename = datetime.now().strftime("data-%d-%m-%Y.csv")
+        filename = datetime.now().strftime("data-%Y-%m-%d.csv")
         filepath = os.path.join(DATA_DIR, filename)
 
         filepath = get_unique_filepath(filepath)
@@ -68,7 +68,7 @@ def save_graph(mesures, pressure):
         DATA_DIR = "data"
         os.makedirs(DATA_DIR, exist_ok=True)
 
-        filename = datetime.now().strftime("data-%d-%m-%Y.png")
+        filename = datetime.now().strftime("data-%Y-%m-%d.png")
         filepath = os.path.join(DATA_DIR, filename)
 
         filepath = get_unique_filepath(filepath)
@@ -85,7 +85,7 @@ def save_graph(mesures, pressure):
 
         # Tracé des températures
         _temp_keys = [f"temp{i}" for i in range(1, 8)]
-        _temp_names = ["Temp 1", "Temp 2", "Temp 3", "Temp 4", "Temp 5", "Temp 6", "Temp 7"]
+        _temp_names = ["1-Outil" , "2-Outil", "3-Entrée air", "4-Sortie air" , "5-Mur fond", "6-Mur droit", "7-Mur gauche"]
         for i, (key, name) in enumerate(zip(_temp_keys, _temp_names)):
             vals = mesures.get(key, [])
 
@@ -114,7 +114,7 @@ def save_graph(mesures, pressure):
                 ax_p.plot(valid_times, valid_press, color=_press_color, linewidth=1.0, linestyle="--", label="Pression")
                 
             else:
-                ax_p.plot([], [],color=_press_color,linewidth=1.0,linestyle="--",label="Pression")   
+                ax_p.plot([], [],color=_press_color,linewidth=1.0,linestyle="--",label="8-Vide")   
 
         else :
             fig.suptitle("COURBES TEMPERATURES", fontsize=15, color=FG_DIM)

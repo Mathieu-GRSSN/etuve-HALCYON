@@ -229,6 +229,7 @@ class StateMachine:
             pressure = self.data["PUMP_ACTIVATION"]
 
             # Lance le thread d'enregistrement et d'archivage (pour éviter de bloquer l'interface)
+            # La fermeture de l'IHM sera déclenchée à la fin du thread
             threading.Thread(target=self._save_and_archive,args=(all_mesures, pressure),daemon=True).start()
 
             return update
@@ -314,6 +315,7 @@ class StateMachine:
             return update
             
         elif state == "STOP":
+
             # Ferme tous les relais
             self.relais.all_relay_off()
 
@@ -353,24 +355,34 @@ class StateMachine:
         return update
     
     def _save_and_archive(self, all_mesures, pressure):
-            # Enregistre sous PNG les courbes
-            save_graph, filepath_png = us.save_graph(all_mesures,pressure)
-            if save_graph == 1:
-                self.logger.info(f'Données sauvegarder en PNG')
-            elif save_graph == 0:
-                self.logger.error(f"Enregistrement des données en PNG échoué")
+        # Enregistre sous PNG les courbes
+        save_graph, filepath_png = us.save_graph(all_mesures,pressure)
+        if save_graph == 1:
+            self.logger.info(f'Données sauvegarder en PNG')
+        elif save_graph == 0:
+            self.logger.error(f"Enregistrement des données en PNG échoué")
 
-            # Enregistre sous CSV les données
-            save_mesures, filepath_csv = us.save_all_mesures(all_mesures)
-            if save_mesures == 1:
-                self.logger.info(f'Données sauvegarder en CSV')
-            elif save_mesures == 0:
-                self.logger.error(f"Enregistrement des données en CSV échoué")
+        # Enregistre sous CSV les données
+        save_mesures, filepath_csv = us.save_all_mesures(all_mesures)
+        if save_mesures == 1:
+            self.logger.info(f'Données sauvegarder en CSV')
+        elif save_mesures == 0:
+            self.logger.error(f"Enregistrement des données en CSV échoué")
 
-            # Enregistrement sur NAS
-            archive = an.archive_images(filepath_csv, filepath_png)
-            if archive:
-                self.logger.info(f'CSV et PNG archivé sur NAS')
-            else:
-                self.logger.error(f"Archivage CSV et PNG sur NAS échoué")
+        # Enregistrement sur NAS
+        archive = an.archive_images(filepath_csv, filepath_png)
+        if archive:
+            self.logger.info(f'CSV et PNG archivé sur NAS')
+        else:
+            self.logger.error(f"Archivage CSV et PNG sur NAS échoué")
+
+        # Fermer l'IHM après archivage : demande exécutée sur la boucle Tkinter principale
+        try:
+            if hasattr(self, 'ihm') and getattr(self.ihm, 'window', None):
+                self.ihm.window.after(0, lambda: self.ihm._quit())
+        except Exception as e:
+            self.logger.error(f"Échec fermeture IHM après archivage: {e}")
+
+        return True
+
 
