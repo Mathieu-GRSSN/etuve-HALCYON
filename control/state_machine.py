@@ -263,7 +263,6 @@ class StateMachine:
             temp_min_tool = min(self.data["temp1"], self.data["temp2"])
             temp_max_tool = max(self.data["temp1"], self.data["temp2"])
 
-            print(f"[StateMachine] Temp min : {temp_min_tool:.2f} | Temp max : {temp_max_tool:.2f}")
 
             # Si les chauffages sont arrétés (ex: 200°c dépassé) rallume
             if (not self.data["P1_activated"]) and (not self.data["P2_activated"]) :
