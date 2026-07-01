@@ -112,17 +112,16 @@ class Capteur:
         else:
             # Converti la valeur et l'enregistre si la pump est activée
             if is_pressure:
-                if temp_buffer[8] > 9.5 and temp_buffer[8] < 47.5: # Vérifie que la valeur est dans une plage plausible du capteur
 
-                    voltage_V = temp_buffer[8]  # Valeur brute du canal 8 (interprétée comme tension scaled)
-                    current_mA = (voltage_V) / (24/10.105)
-                    press_vide = current_mA*1/16 -5/4
-                else:
-                    press_vide = None
+                voltage_V = temp_buffer[8]  # Valeur brute du canal 8 (interprétée comme tension scaled)
+                current_mA = (voltage_V) / (24/10.105)
+                press_vide = round(current_mA*1/16 -5/4,3)
 
                 # press_vide = press_vide_simu()
             else:
                 press_vide = None
+
+            print(f"[capteur] press_vide : {press_vide}")
 
         # Organisation des données dans un dictionnaire
         mesures = {

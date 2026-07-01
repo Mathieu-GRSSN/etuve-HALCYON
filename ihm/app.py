@@ -752,6 +752,8 @@ class HalcyonIHM:
                 press = snapshot_data.get("press_vide", 0)
                 if press == "ERROR_SENSOR":
                     text_press = "ERREUR"
+                elif press is None:
+                    text_press = "None"
                 else:
                     text_press = f"{press:.2f}"
             else:

@@ -141,7 +141,7 @@ class EventManager:
         elif data.get("state") == "HOLD":
             elapsed = datetime.now() - data.get("time_start_hold")
 
-            if elapsed.total_seconds() >= data.get("TIME_HOLD") : # temp_hold en minute, faire x60
+            if elapsed.total_seconds() >= data.get("TIME_HOLD")*60 : # temp_hold en minute, faire x60
                 event = 'time_reached'
             
             else:
@@ -149,10 +149,10 @@ class EventManager:
             
             return event, update
 
-        # Si état COOLING -> temperature low si temp outil inférieur à 30°C / no transition sinon (mettre 42°C)
+        # Si état COOLING -> temperature low si temp outil inférieur à 42°C / no transition sinon (mettre 42°C)
         elif data.get("state") == "COOLING":
             temp_max_tool = max(data.get("temp1"), data.get("temp2"))
-            if temp_max_tool < 30:
+            if temp_max_tool < 42:
                 event = 'temperature_low'
 
             else:

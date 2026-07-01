@@ -263,23 +263,18 @@ class StateMachine:
             temp_min_tool = min(self.data["temp1"], self.data["temp2"])
             temp_max_tool = max(self.data["temp1"], self.data["temp2"])
 
-
-            # Si les chauffages sont arrétés (ex: 200°c dépassé) rallume
-            if (not self.data["P1_activated"]) and (not self.data["P2_activated"]) :
-                self.relais.heating_Pmax_on()
-                update["P1_activated"] = True
-                update["P2_activated"] = True
-
-            # 
-            elif temp_max_tool > temp_min_tool + DIFF_MAX :
+            # arrete le chauffage si diff trop importante
+            if temp_max_tool > temp_min_tool + DIFF_MAX :
                 self.relais.heating_Pmax_off()
                 update["P1_activated"] = False
                 update["P2_activated"] = False
-                
-            else:
+            
+            # Si les chauffages sont arrétés (ex: 200°c dépassé) rallume
+            elif (not self.data["P1_activated"]) and (not self.data["P2_activated"]) :
                 self.relais.heating_Pmax_on()
                 update["P1_activated"] = True
                 update["P2_activated"] = True
+                
 
             return update
 
